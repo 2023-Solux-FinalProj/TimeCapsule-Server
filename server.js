@@ -45,9 +45,9 @@ connection.connect(err => {
 app.use(express.json());
 
 app.get('/', function(req, res){
-	//res.send('타임캡슐, 과거에서 온 편지입니다.');
+	res.send('타임캡슐, 과거에서 온 편지입니다.');
 	// 프론트의 카카오 로그인 링크 연결해두느라 아랫줄 코드 작성했습니다, 삭제하셔도 됩니다!
-	res.sendFile(__dirname+'/');
+	//res.sendFile(__dirname+'/');
 })
 // 여기까지 git pull 코드
 
