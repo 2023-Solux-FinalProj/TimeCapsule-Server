@@ -5,6 +5,7 @@ const mysql = require('mysql');
 const http = require('http');
 
 const app = express();
+app.set('view engine', 'ejs');
 
 require('dotenv').config();
 
@@ -187,5 +188,91 @@ app.post('/oauth/callback/kakao', async(req, res, next) => {
 	}
 	//console.log("끝...");
 })
+
+// 캡슐전송관련 코드 --채민
+
+
+app.get('/send', (req, res) => {
+  res.send('캡슐이 전송 되었습니다!---정보저장중(예시)!');
+});
+
+
+app.post('/send', (req, res) => {
+  // 클라이언트에서 보낸 캡슐 데이터 추출
+  const {
+    receiver,
+    capsule: {
+      writtendate,
+      arrivaldate,
+      cards,
+      music,
+      theme,
+    },
+  } = req.body;
+
+  // arrivaldate를 연결하여 하나의 문자열로 만들기
+  const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
+
+  // 추가 정보 생성
+  const senderID = 33;  // 사용자 토큰에서 사용자 ID 추출 ====>아직 미완성 수정 필요함... 토큰 추출 코드?...
+  const send_at = writtendate;  // 현재 날짜 및 시간 정보
+  const arrive_at = new Date(arrivalDateString);  // arrivaldate 정보
+
+  // DB에 Capsule 테이블에 저장하는 코드
+  const insertCapsuleQuery = 'INSERT INTO Capsule (senderID, send_at, arrive_at, music, theme) VALUES (?, ?, ?, ?, ?)';
+  connection.query(insertCapsuleQuery, [senderID, send_at, arrive_at, music, theme], async (err, capsuleResult) => {
+    if (err) {
+      console.error('Error executing MySQL query (Capsule):', err);
+      res.status(500).json({
+        isSuccess: false,
+        code: '5001',
+        message: 'Failed to save capsule to the database',
+        result: null
+      });
+    } else {
+      console.log('Capsule saved to the database');
+      const capsuleID = capsuleResult.insertId;
+
+      // Cards를 DB에 Contents 테이블에 저장하는 코드
+      const insertContentsQuery = 'INSERT INTO Contents (capsuleID, contentsID, imageUrl, text) VALUES ?';
+      const cardsData = cards.map((card, index) => [capsuleID, index + 1, card.image, card.text]); //수정 필요함 카드수에 따라 id저장될 수 있도록==>질문 후 수정 
+
+      connection.query(insertContentsQuery, [cardsData], async(err, res) => {
+        if (err) {
+          console.error('Error executing MySQL query (Contents):', err);
+          res.status(500).json({
+            isSuccess: false,
+            code: '5002',
+            message: 'Failed to save contents to the database',
+            result: null
+          });
+        } else {
+          const insertReceiverQuery = ' INSERT INTO Receiver (capsuleID, toEmail) VALUES (?,?) ';
+          const receiverdata = [capsuleID, receiver];
+          connection.query(insertReceiverQuery,receiverdata, async(err, res) => {
+            if (err) {
+              console.error('Error executing MySQL query (Receiver):', err);
+              res.status(500).json({
+                isSuccess: false,
+                code: '5003',
+                message: 'Failed to save receiver to the database',
+                result: null
+              });
+            } 
+          });
+        }
+      });
+    }
+  });
+  console.log('Contents and Receiver saved to the database');
+            return res.json({
+            isSuccess: true,
+            code: '2000',
+            message: 'Capsule, contents, and receiver saved to the database successfully',
+            result: null
+              });
+});
+
+
 
 
