@@ -169,36 +169,7 @@ app.post('/oauth/callback/kakao', async(req, res, next) => {
 		// 로그인 성공 후
 		// 서버에서 JWT 토큰 발행해서 프론트로 보내주기 
 		if (tokenData) {
-			const userToken = jwt.sign({
-				email : email,
-				name : username,
-			},
-			CLIENT_SECRET,
-			{
-				expiresIn: "60m",
-			});
-			const responseToken = {
-				userToken : userToken,
-			}
-			res.send(responseToken);
-		}
-
-		})} catch (err) {
-		console.log(err);
-	}
-	//console.log("끝...");
-})
-
-// 캡슐전송관련 코드 --채민
-
-
-app.get('/send', (req, res) => {
-  res.send('캡슐이 전송 되었습니다!---정보저장중(예시)!');
-});
-
-
-app.post('/send', (req, res) => {
-  // 클라이언트에서 보낸 캡슐 데이터 추출
+			const userToken정
   const {
     receiver,
     capsule: {
