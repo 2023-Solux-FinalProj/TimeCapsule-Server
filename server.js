@@ -170,80 +170,105 @@ app.post('/oauth/callback/kakao', async(req, res, next) => {
 		// 서버에서 JWT 토큰 발행해서 프론트로 보내주기 
 		if (tokenData) {
 			const userToken정
-  const {
-    receiver,
-    capsule: {
-      writtendate,
-      arrivaldate,
-      cards,
-      music,
-      theme,
-    },
-  } = req.body;
+  
+  // /capsule 엔드포인트에대한 응답코드
+			app.post('/capsule', (req, res) => {
+				const {
+					 receiver,
+					capsule: {
+						writer,
+                                                writtendate,
+                                                arrivaldate,
+                                                cards,
+                                                music,
+                                                theme,
+                                                },
+				} = req.body;
 
-  // arrivaldate를 연결하여 하나의 문자열로 만들기
   const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
+  const send_at = writtendate;
+  const arrive_at = new Date(arrivalDateString);
 
-  // 추가 정보 생성
-  const senderID = 33;  // 사용자 토큰에서 사용자 ID 추출 ====>아직 미완성 수정 필요함... 토큰 추출 코드?...
-  const send_at = writtendate;  // 현재 날짜 및 시간 정보
-  const arrive_at = new Date(arrivalDateString);  // arrivaldate 정보
-
-  // DB에 Capsule 테이블에 저장하는 코드
-  const insertCapsuleQuery = 'INSERT INTO Capsule (senderID, send_at, arrive_at, music, theme) VALUES (?, ?, ?, ?, ?)';
-  connection.query(insertCapsuleQuery, [senderID, send_at, arrive_at, music, theme], async (err, capsuleResult) => {
+  // 1. writer의 memberID 가져오기
+  const getWriterIDQuery = 'SELECT memberID FROM User WHERE username = ?';
+  connection.query(getWriterIDQuery, [writer], (err, userResult) => {
     if (err) {
-      console.error('Error executing MySQL query (Capsule):', err);
-      res.status(500).json({
+      console.error('Error executing MySQL query (User):', err);
+      return res.status(500).json({
         isSuccess: false,
-        code: '5001',
-        message: 'Failed to save capsule to the database',
+        code: '5000',
+        message: 'memberID를 User테이블에서 불러오는데 실패하였습니다. ',
         result: null
       });
-    } else {
-      console.log('Capsule saved to the database');
+    }
+
+    if (userResult.length === 0) {
+      return res.status(400).json({
+        isSuccess: false,
+        code: '4001',
+        message: '유효하지않은 username입니다.',
+        result: null
+      });
+    }
+
+    const memberID = userResult[0].memberID;
+
+    // 2. Capsule 테이블에 저장
+    const insertCapsuleQuery = 'INSERT INTO Capsule (senderID, send_at, arrive_at, music, theme) VALUES (?, ?, ?, ?, ?)';
+    connection.query(insertCapsuleQuery, [memberID, send_at, arrive_at, music, theme], (err, capsuleResult) => {
+      if (err) {
+        console.error('Error executing MySQL query (Capsule):', err);
+        return res.status(500).json({
+          isSuccess: false,
+          code: '5001',
+          message: 'capsule정보 db에 저장실패. ',
+          result: null
+        });
+      }
+
       const capsuleID = capsuleResult.insertId;
 
-      // Cards를 DB에 Contents 테이블에 저장하는 코드
-      const insertContentsQuery = 'INSERT INTO Contents (capsuleID, contentsID, imageUrl, text) VALUES ?';
-      const cardsData = cards.map((card, index) => [capsuleID, index + 1, card.image, card.text]); //수정 필요함 카드수에 따라 id저장될 수 있도록==>질문 후 수정 
+      // 3. Contents 테이블에 저장
+      const insertContentsQuery = 'INSERT INTO Contents (capsuleID, imageUrl, text) VALUES ?';
+      const cardsData = cards.map((card) => [capsuleID, card.image, card.text]);
 
-      connection.query(insertContentsQuery, [cardsData], async(err, res) => {
+      connection.query(insertContentsQuery, [cardsData], (err,res) => {
         if (err) {
           console.error('Error executing MySQL query (Contents):', err);
-          res.status(500).json({
+          return res.status(500).json({
             isSuccess: false,
             code: '5002',
             message: 'Failed to save contents to the database',
             result: null
           });
-        } else {
-          const insertReceiverQuery = ' INSERT INTO Receiver (capsuleID, toEmail) VALUES (?,?) ';
-          const receiverdata = [capsuleID, receiver];
-          connection.query(insertReceiverQuery,receiverdata, async(err, res) => {
-            if (err) {
-              console.error('Error executing MySQL query (Receiver):', err);
-              res.status(500).json({
-                isSuccess: false,
-                code: '5003',
-                message: 'Failed to save receiver to the database',
-                result: null
-              });
-            } 
-          });
         }
+
+        // 4. Receiver 테이블에 저장
+        const insertReceiverQuery = 'INSERT INTO Receiver (capsuleID, toEmail) VALUES (?, ?)';
+        connection.query(insertReceiverQuery, [capsuleID, receiver], (err, res) => {
+          if (err) {
+            console.error('Error executing MySQL query (Receiver):', err);
+            return res.status(500).json({
+              isSuccess: false,
+              code: '5003',
+              message: 'Failed to save receiver to the database',
+              result: null
+            });
+          }
+
+        });
       });
-    }
+    });
   });
-  console.log('Contents and Receiver saved to the database');
-            return res.json({
-            isSuccess: true,
-            code: '2000',
-            message: 'Capsule, contents, and receiver saved to the database successfully',
-            result: null
-              });
+  console.log('모든 정보 DB에 저장 완료!');
+  // 성공 응답 보내기
+  return res.status(200).json({
+    isSuccess: true,
+    code: '2000',
+    message: 'Capsule, contents, and receiver saved to the database successfully',
+    result: null});
 });
 
 
-
+   
 
