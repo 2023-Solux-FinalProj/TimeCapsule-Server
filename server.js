@@ -232,11 +232,12 @@ const checkJWT = (req, res) => {
 	const secretKey = require('./config/secretkey');
 
 	jwt.verify(token, secretKey, (err, decoded) => {
-		if (err) {
-			res.send(err);
+		try {
+			next();
+		} catch (err) {
+			res.send(err.message);
 			return;
 		}
-		next();
 	})
 }
 
