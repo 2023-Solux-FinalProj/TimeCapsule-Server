@@ -7,75 +7,64 @@ const http = require('http');
 const app = express();
 app.set('view engine', 'ejs');
 
+
 require('dotenv').config();
 
-// CORS 설정
-app.use(cors({
-	origin: '*',
-}));
+// CORS 설정,프론트엔드와의 협업을 위한..
+
+const corsOptions = {
+  origin: 'http://localhost:3000', // 허용할 도메인
+  optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+};
+
+app.use(cors(corsOptions));
+
+
+
 
 // .env 파일에서 DB_URL 환경 변수 읽기
 const dbUrl = process.env.DB_URL;
 const port = process.env.PORT;
 
 const connection = mysql.createConnection({
-	host: dbUrl, // 데이터베이스 호스트
-	user: 'admin', // 데이터베이스 사용자 이름
-	password: 'capsule2024', // 데이터베이스 비밀번호
-	database: 'capsule', // 연결할 데이터베이스 이름
-	port: '3306',
-	// 추가코드 (민진)
-	dataStrings: "date",
+    host: dbUrl, // 데이터베이스 호스트
+    user: 'admin', // 데이터베이스 사용자 이름
+    password: 'capsule2024', // 데이터베이스 비밀번호
+    database: 'capsule', // 연결할 데이터베이스 이름
+    port: '3306'
 });
+
+app.use(express.json()); 
 
 // 데이터베이스 연결
 connection.connect(err => {
-	if (err) {
-	return console.error('[Mysql 연결 에러] error: ' + err.message);
-	}
-	else {
-		console.log('MySQL 연결 성공!');
+    if (err) {
+      return console.error('[Mysql 연결 에러] error: ' + err.message);
+    }
+    else {
+        console.log('MySQL 연결 성공!');
 
-		// 데이터베이스 연결 성공 -> 서버 시작
-		app.listen(port, () => {
-		console.log('CAPSULE 서버 8080 포트 연결 성공!');
-		});
-	}
+        // 데이터베이스 연결 성공 -> 서버 시작
+        app.listen(port, () => {
+          console.log('CAPSULE 서버 8080 포트 연결 성공!');
+        });
+    }
 });
 
-app.use(express.json());
+
 
 app.get('/', function(req, res){
-	res.send('타임캡슐, 과거에서 온 편지입니다.');
-	// 프론트의 카카오 로그인 링크 연결해두느라 아랫줄 코드 작성했습니다, 삭제하셔도 됩니다!
-	//res.sendFile(__dirname+'/');
+  res.send('타임캡슐, 과거에서 온 편지입니다.');
 })
-// 여기까지 git pull 코드
 
 
-// 쿼리 스트링 라이브러리
-const qs = require("qs");
-const axios = require("axios");
-// Date 관련 라이브러리
-const moment = require("moment");
-const jwt = require("jsonwebtoken");
-const bodyParser = require('body-parser');
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended:true}));
-
-// 충돌이 있는지 미리 확인함
-process.on('uncaughtException', function (err) {
-	console.log(err);
+// /send 응답 
+app.get('/capsule', (req, res) => {
+  res.send('캡슐이 전송 되었습니다!---정보저장중!');
 });
 
-// 인가코드 받아옴
-// 토큰 발급
-// 토큰 사용해 사용자 정보 받아옴
-// 존재하는 사용자 정보면 ....?
-// 존재하지 않는 사용자 정보면 회원가입
 
-// 카카오 로그인 콜백 라우트
 app.post('/oauth/callback/kakao', async(req, res, next) => {
 	// const {session, query} = req;
 	// // 인가코드 저장
@@ -188,20 +177,21 @@ app.post('/oauth/callback/kakao', async(req, res, next) => {
 	}
 	//console.log("끝…");
 })
-  
-  // /capsule 엔드포인트에대한 응답코드
-			app.post('/capsule', (req, res) => {
-				const {
-					 receiver,
-					capsule: {
-						writer,
-                                                writtendate,
-                                                arrivaldate,
-                                                cards,
-                                                music,
-                                                theme,
-                                                },
-				} = req.body;
+
+
+
+app.post('/capsule', (req, res) => {
+  const {
+    receiver,
+    capsule: {
+      writer,
+      writtendate,
+      arrivaldate,
+      cards,
+      music,
+      theme,
+    },
+  } = req.body;
 
   const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
   const send_at = writtendate;
@@ -288,5 +278,4 @@ app.post('/oauth/callback/kakao', async(req, res, next) => {
 });
 
 
-   
 
