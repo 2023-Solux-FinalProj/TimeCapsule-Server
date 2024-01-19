@@ -171,8 +171,14 @@ app.post('/oauth/callback/kakao', async(req, res, next) => {
 
 		const username = data.kakao_account.name;
 		const email = data.kakao_account.email;
-		const birth = data.kakao_account.birthyear + '-' + (data.kakao_account.birthday).substring(0, 2) + '-' + (data.kakao_account.birthday).substring(2);
+		if (data.kakao_account.birthday) {
+			const birth = data.kakao_account.birthyear + '-' + (data.kakao_account.birthday).substring(0, 2) + '-' + (data.kakao_account.birthday).substring(2);
+			
+		} else {
+			const birth = null;
+		}
 		const today = (moment().format("YYYY-MM-DD"));
+		
 		//console.log(birth);
 
 		// 이미 존재하는 유저인지 검색
