@@ -253,11 +253,10 @@ app.post('/capsule',
 	const secretKey = require('./config/secretkey');
 
 	jwt.verify(token, secretKey, (err, decoded) => {
-		try {
-			next();
-		} catch (err) {
-			res.redirect('/');
+		if (err) {
+			res.send(err.message);
 		}
+		next();
 	})
 }, 
 
