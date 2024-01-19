@@ -223,7 +223,28 @@ app.post('/oauth/callback/kakao', async(req, res, next) => {
 })
 
 // 토큰 검증 미들웨어
-const checkJWT = (req, res) => {
+// const checkJWT = (req, res, next) => {
+// 	let token = null;
+// 	if (req.headers.authorization) {
+// 		token = req.headers.authorization.split('Bearer ')[1];
+// 	}
+// 	//console.log(`${token}`);
+// 	const secretKey = require('./config/secretkey');
+
+// 	jwt.verify(token, secretKey, (err, decoded) => {
+// 		try {
+// 			next();
+// 		} catch (err) {
+// 			res.send(err.message);
+// 			return;
+// 		}
+// 	})
+// }
+
+
+app.post('/capsule', 
+// JWT 토큰 검증
+(req, res, next) => {
 	let token = null;
 	if (req.headers.authorization) {
 		token = req.headers.authorization.split('Bearer ')[1];
@@ -239,10 +260,10 @@ const checkJWT = (req, res) => {
 			return;
 		}
 	})
-}
+}, 
 
-
-app.post('/capsule', checkJWT, (req, res) => {
+	// capsule post 코드
+	(req, res) => {
 	const {
 		receiver,
 		capsule: {
