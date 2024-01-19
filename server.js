@@ -169,7 +169,25 @@ app.post('/oauth/callback/kakao', async(req, res, next) => {
 		// 로그인 성공 후
 		// 서버에서 JWT 토큰 발행해서 프론트로 보내주기 
 		if (tokenData) {
-			const userToken정
+			const userToken = jwt.sign({
+				email : email,
+				name : username,
+			},
+			CLIENT_SECRET,
+			{
+				expiresIn: "60m",
+			});
+			const responseToken = {
+				userToken : userToken,
+			}
+			res.send(responseToken);
+		}
+
+		})} catch (err) {
+		console.log(err);
+	}
+	//console.log("끝…");
+})
   
   // /capsule 엔드포인트에대한 응답코드
 			app.post('/capsule', (req, res) => {
