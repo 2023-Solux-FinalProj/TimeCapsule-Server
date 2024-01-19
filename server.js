@@ -65,9 +65,9 @@ app.get('/', function(req, res){
 
 
 // /send 응답 
-app.get('/capsule', (req, res) => {
-	res.send('캡슐이 전송 되었습니다!---정보저장중!');
-});
+// app.get('/capsule', (req, res) => {
+// 	res.send('캡슐이 전송 되었습니다!---정보저장중!');
+// });
 
 // 여기까지 git pull 코드
 
@@ -193,10 +193,11 @@ app.post('/oauth/callback/kakao', async(req, res, next) => {
 					console.log("회원가입 완료");
 				} catch (err) {
 					res.send(err);
+					return;
 				}
 			}
 		// 추후 req로 받아올 것이므로 삭제하기
-		CLIENT_SECRET = "LRDTd28fYHcug8QrjgkKKYkut3LUkwMy";
+		const CLIENT_SECRET = "LRDTd28fYHcug8QrjgkKKYkut3LUkwMy";
 
 		// 로그인 성공 후
 		// 서버에서 JWT 토큰 발행해서 프론트로 보내주기 
