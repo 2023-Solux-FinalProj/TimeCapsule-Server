@@ -58,9 +58,9 @@ connection.connect(err => {
 
 
 
-// app.get('/', function(req, res){
-// 	res.send('타임캡슐, 과거에서 온 편지입니다.');
-// })
+app.get('/', function(req, res){
+	res.send('타임캡슐, 과거에서 온 편지입니다.');
+})
 
 
 
@@ -114,37 +114,37 @@ app.post('/oauth/callback/kakao', async(req, res, next) => {
 	const CLIENT_ID = req.body.client_id;
 	const REDIRECT_URI = req.body.redirect_uri;
 	const CLIENT_SECRET = req.body.client_secret;
-	// let tokenResponse;
+	let tokenResponse;
 
-	// try {
-	// 	tokenResponse = await axios({
-	// 		method: 'POST',
-	// 		url: 'https://kauth.kakao.com/oauth/token',
-	// 		headers: {
-	// 			'content-type': `application/x-www-form-urlencoded`
-	// 		},
-	// 		data: qs.stringify({
-	// 			grant_type: 'authorization_code',
-	// 			client_id: CLIENT_ID,
-	// 			client_secret: CLIENT_SECRET,
-	// 			redirect_url: REDIRECT_URI,
-	// 			code : code,
-	// 		}),
-	// 		withCredentials:true,
-	// 	});
-	// } catch (err) {
-	// 	console.log(err);
-	// 	return res.json(err);
-	// }
-	// // console.log(tokenResponse);
+	try {
+		tokenResponse = await axios({
+			method: 'POST',
+			url: 'https://kauth.kakao.com/oauth/token',
+			headers: {
+				'content-type': `application/x-www-form-urlencoded`
+			},
+			data: qs.stringify({
+				grant_type: 'authorization_code',
+				client_id: CLIENT_ID,
+				client_secret: CLIENT_SECRET,
+				redirect_url: REDIRECT_URI,
+				code : code,
+			}),
+			withCredentials:true,
+		});
+	} catch (err) {
+		console.log(err);
+		return res.json(err);
+	}
+	// console.log(tokenResponse);
 
-	// const tokenData = tokenResponse.data;
-	// // 엑세스 토큰 발급 완료
-	// // console.log('토큰 :' + access_token);
+	const tokenData = tokenResponse.data;
+	// 엑세스 토큰 발급 완료
+	// console.log('토큰 :' + access_token);
 
-	// // 토큰으로 사용자 정보 받아오기
+	// 토큰으로 사용자 정보 받아오기
 
-	const tokenData = req.body.token;
+	//const tokenData = req.body.token;
 
 	try {
 
