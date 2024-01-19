@@ -241,7 +241,7 @@ const checkJWT = (req, res) => {
 }
 
 
-app.post('/capsule', (req, res) => {
+app.post('/capsule', checkJWT, (req, res) => {
 	const {
 		receiver,
 		capsule: {
