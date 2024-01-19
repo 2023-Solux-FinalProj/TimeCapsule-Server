@@ -58,9 +58,9 @@ connection.connect(err => {
 
 
 
-app.get('/', function(req, res){
-	res.send('타임캡슐, 과거에서 온 편지입니다.');
-})
+// app.get('/', function(req, res){
+// 	res.send('타임캡슐, 과거에서 온 편지입니다.');
+// })
 
 
 
@@ -161,7 +161,6 @@ app.post('/oauth/callback/kakao', async(req, res, next) => {
 				Authorization: `Bearer ${tokenData}`,
 			},
 		});
-		console.log("userResponse :" + userResponse);
 
 		// 유저 정보 받아오기
 		const {data} = userResponse;
@@ -171,11 +170,10 @@ app.post('/oauth/callback/kakao', async(req, res, next) => {
 
 		const username = data.kakao_account.name;
 		const email = data.kakao_account.email;
+		let birth = null;
 		if (data.kakao_account.birthday) {
-			const birth = data.kakao_account.birthyear + '-' + (data.kakao_account.birthday).substring(0, 2) + '-' + (data.kakao_account.birthday).substring(2);
+			birth = data.kakao_account.birthyear + '-' + (data.kakao_account.birthday).substring(0, 2) + '-' + (data.kakao_account.birthday).substring(2);
 			
-		} else {
-			const birth = null;
 		}
 		const today = (moment().format("YYYY-MM-DD"));
 		
@@ -192,35 +190,55 @@ app.post('/oauth/callback/kakao', async(req, res, next) => {
 					)
 					console.log("회원가입 완료");
 				} catch (err) {
-					res.send(err);
+					res.send(err.message);
 					return;
 				}
 			}
-
+		const secretKey = require('./config/secretkey');
+		const SECRET_KEY = secretKey;
 		// 로그인 성공 후
 		// 서버에서 JWT 토큰 발행해서 프론트로 보내주기 
 		if (tokenData) {
 			const userToken = jwt.sign({
-				email : email,
-				name : username,
+				"type" : 'JWT',
+				"email" : email,
+				"name" : username,
 			},
-			CLIENT_SECRET,
+			SECRET_KEY,
 			{
+
 				expiresIn: "60m",
 			});
+
 			const responseToken = {
 				"userToken" : userToken,
 			}
-			console.log(`${responseToken}`);
 			res.send(responseToken);
 		}
 
 		})} catch (err) {
-		console.log(err);
+		console.log(err.message);
 	}
 	//console.log("끝…");
 })
 
+// 토큰 검증 미들웨어
+const checkJWT = (req, res) => {
+	let token = null;
+	if (req.headers.authorization) {
+		token = req.headers.authorization.split('Bearer ')[1];
+	}
+	//console.log(`${token}`);
+	const secretKey = require('./config/secretkey');
+
+	jwt.verify(token, secretKey, (err, decoded) => {
+		if (err) {
+			res.send(err);
+			return;
+		}
+		next();
+	})
+}
 
 
 app.post('/capsule', (req, res) => {
