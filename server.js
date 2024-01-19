@@ -196,7 +196,7 @@ app.post('/oauth/callback/kakao', async(req, res, next) => {
 				}
 			}
 		// 추후 req로 받아올 것이므로 삭제하기
-		CLIENT_SECRET = process.env.CLIENT_SECRET;
+		CLIENT_SECRET = "LRDTd28fYHcug8QrjgkKKYkut3LUkwMy";
 
 		// 로그인 성공 후
 		// 서버에서 JWT 토큰 발행해서 프론트로 보내주기 
