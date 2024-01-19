@@ -213,7 +213,7 @@ app.post('/oauth/callback/kakao', async(req, res, next) => {
 			const responseToken = {
 				userToken : userToken,
 			}
-			res.send(responseToken);
+			res.send(responseToken.json());
 		}
 
 		})} catch (err) {
