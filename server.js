@@ -110,10 +110,10 @@ app.post('/oauth/callback/kakao', async(req, res, next) => {
 	// // 인가코드 받아오는 것까지 완료
 	// console.log(f_code);
 
-	// const code = req.body.code;
-	// const CLIENT_ID = req.body.client_id;
-	// const REDIRECT_URI = req.body.redirect_uri;
-	// const CLIENT_SECRET = req.body.client_secret;
+	//const code = req.body.code;
+	const CLIENT_ID = req.body.client_id;
+	const REDIRECT_URI = req.body.redirect_uri;
+	const CLIENT_SECRET = req.body.client_secret;
 	// let tokenResponse;
 
 	// try {
@@ -161,7 +161,7 @@ app.post('/oauth/callback/kakao', async(req, res, next) => {
 				Authorization: `Bearer ${tokenData}`,
 			},
 		});
-		//console.log("userResponse :" + userResponse);
+		console.log("userResponse :" + userResponse);
 
 		// 유저 정보 받아오기
 		const {data} = userResponse;
@@ -196,8 +196,6 @@ app.post('/oauth/callback/kakao', async(req, res, next) => {
 					return;
 				}
 			}
-		// 추후 req로 받아올 것이므로 삭제하기
-		const CLIENT_SECRET = "LRDTd28fYHcug8QrjgkKKYkut3LUkwMy";
 
 		// 로그인 성공 후
 		// 서버에서 JWT 토큰 발행해서 프론트로 보내주기 
@@ -211,9 +209,10 @@ app.post('/oauth/callback/kakao', async(req, res, next) => {
 				expiresIn: "60m",
 			});
 			const responseToken = {
-				userToken : userToken,
+				"userToken" : userToken,
 			}
-			res.send(responseToken.json());
+			console.log(responseToken);
+			res.send(responseToken);
 		}
 
 		})} catch (err) {
