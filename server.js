@@ -256,8 +256,7 @@ app.post('/capsule',
 		try {
 			next();
 		} catch (err) {
-			res.send(err.message);
-			return;
+			res.redirect('/');
 		}
 	})
 }, 
