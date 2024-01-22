@@ -100,7 +100,7 @@ process.on('uncaughtException', function (err) {
 // 카카오 로그인 콜백 라우트
 
 
-app.post('/oauth/callback/kakao', async(req, res, next) => {
+app.post('/login', async(req, res, next) => {
 	// const {session, query} = req;
 	// // 인가코드 저장
 	// const f_code = query.code;
