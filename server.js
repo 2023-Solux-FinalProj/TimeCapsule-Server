@@ -241,21 +241,21 @@ app.post('/login', async(req, res, next) => {
 
 app.post('/capsule', 
 // JWT 토큰 검증
-// (req, res, next) => {
-// 	let token = null;
-// 	if (req.headers.authorization) {
-// 		token = req.headers.authorization.split('Bearer ')[1];
-// 	}
-// 	//console.log(`${token}`);
-// 	const secretKey = require('./config/secretkey');
+(req, res, next) => {
+	let token = null;
+	if (req.headers.authorization) {
+		token = req.headers.authorization.split('Bearer ')[1];
+	}
+	//console.log(`${token}`);
+	const secretKey = require('./config/secretkey');
 
-// 	jwt.verify(token, secretKey, (err, decoded) => {
-// 		if (err) {
-// 			res.send(err.message);
-// 		}
-// 		next();
-// 	})
-// }, 
+	jwt.verify(token, secretKey, (err, decoded) => {
+		if (err) {
+			res.send(err.message);
+		}
+		next();
+	})
+}, 
 
 	// capsule post 코드
 	(req, res) => {
