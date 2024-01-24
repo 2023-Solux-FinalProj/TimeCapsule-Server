@@ -252,6 +252,7 @@ app.post('/capsule',
 	jwt.verify(token, secretKey, (err, decoded) => {
 		if (err) {
 			res.send(err.message);
+			return ;
 		}
 		else {
 			console.log("사용자 jwt 토큰 검증 완료");
