@@ -253,7 +253,10 @@ app.post('/capsule',
 		if (err) {
 			res.send(err.message);
 		}
-		next();
+		else {
+			console.log("사용자 jwt 토큰 검증 완료");
+			next();
+		}
 	})
 }, 
 
