@@ -165,7 +165,7 @@ app.post('/login', async(req, res, next) => {
 		
 		if (!data.kakao_account.email) throw new error ("KEY_ERROR", 400);
 
-		const username = data.kakao_account.name;
+		const username = data.kakao_account.profile.nickname;
 		const email = data.kakao_account.email;
 		let birth = null;
 		if (data.kakao_account.birthday) {
