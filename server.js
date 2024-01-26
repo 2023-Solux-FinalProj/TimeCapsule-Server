@@ -133,7 +133,9 @@ app.post('/login', async(req, res, next) => {
 			//withCredentials:true,
 		});
 	} catch (err) {
+		console.log("[토큰 발급 에러!!]\n");
 		console.log(err);
+		console.log("\n\n\n");
 		return res.json(err);
 	}
 	// console.log(tokenResponse);
@@ -214,7 +216,9 @@ app.post('/login', async(req, res, next) => {
 		}
 
 		})} catch (err) {
-		console.log(err.message);
+			console.log("[토큰 받아온 이후 에러!!]\n");
+			console.log(err);
+			console.log("\n\n\n");
 	}
 	//console.log("끝…");
 })
