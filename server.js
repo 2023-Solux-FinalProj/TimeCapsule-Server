@@ -130,7 +130,7 @@ app.post('/login', async(req, res, next) => {
 				redirect_url: REDIRECT_URI,
 				code : code,
 			}),
-			withCredentials:true,
+			//withCredentials:true,
 		});
 	} catch (err) {
 		console.log(err);
@@ -214,7 +214,7 @@ app.post('/login', async(req, res, next) => {
 		}
 
 		})} catch (err) {
-		console.log(err.message);
+		console.log(err);
 	}
 	//console.log("끝…");
 })
