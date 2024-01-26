@@ -121,7 +121,7 @@ app.post('/login', async(req, res, next) => {
 			method: 'POST',
 			url: 'https://kauth.kakao.com/oauth/token',
 			headers: {
-				'content-type': `application/x-www-form-urlencoded`
+				'content-type': "application/x-www-form-urlencoded"
 			},
 			data: qs.stringify({
 				"grant_type": 'authorization_code',
@@ -154,10 +154,13 @@ app.post('/login', async(req, res, next) => {
 
 		// access_token으로 사용자 정보 요청
 		userResponse = await axios({
+			headers: {
+				'content-type': "application/x-www-form-urlencoded"
+			},
 			method: 'GET',
 			url : 'https://kapi.kakao.com/v2/user/me',
 			headers: {
-				"Authorization": `Bearer ${tokenData}`,
+				Authorization: `Bearer ${tokenData}`,
 			},
 		});
 
