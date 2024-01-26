@@ -124,11 +124,11 @@ app.post('/login', async(req, res, next) => {
 				'content-type': `application/x-www-form-urlencoded`
 			},
 			data: qs.stringify({
-				grant_type: 'authorization_code',
-				client_id: CLIENT_ID,
-				client_secret: CLIENT_SECRET,
-				redirect_url: REDIRECT_URI,
-				code : code,
+				"grant_type": 'authorization_code',
+				"client_id": CLIENT_ID,
+				"client_secret": CLIENT_SECRET,
+				"redirect_url": REDIRECT_URI,
+				"code" : code,
 			}),
 			//withCredentials:true,
 		});
@@ -157,7 +157,7 @@ app.post('/login', async(req, res, next) => {
 			method: 'GET',
 			url : 'https://kapi.kakao.com/v2/user/me',
 			headers: {
-				Authorization: `Bearer ${tokenData}`,
+				"Authorization": `Bearer ${tokenData}`,
 			},
 		});
 
