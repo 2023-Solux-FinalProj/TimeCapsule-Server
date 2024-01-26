@@ -140,7 +140,7 @@ app.post('/login', async(req, res, next) => {
 	}
 	// console.log(tokenResponse);
 
-	const tokenData = tokenResponse.data;
+	const tokenData = tokenResponse.body.access_token;
 	// // 엑세스 토큰 발급 완료
 	// // console.log('토큰 :' + access_token);
 
