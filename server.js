@@ -367,4 +367,158 @@ app.post('/capsule',
 });
 
 
+app.put('/capsule/:id', (req, response) => {
+	const capsuleId = req.params.id;
+	const { readState } = req.body;
+  
+	// Capsule 테이블의 readState 값을 업데이트하는 SQL 쿼리를 정의합니다.
+	const updateQuery = 'UPDATE Capsule SET readState = ? WHERE capsuleID = ?';
+  
+	// SQL 쿼리를 실행하여 Capsule 테이블의 readState 값을 업데이트합니다.
+	connection.query(updateQuery, [readState, capsuleId], (error, res) => {
+	  if (error) {
+		console.error('Error updating readState:', error);
+		return res.status(500).json({
+		  success: false,
+		  message: 'Failed to update readState'
+		});
+	  }
+	  console.log('Read state updated successfully');
+	  return res.status(200).json({
+		success: true,
+		message: 'Read state updated successfully'
+	  });
+	});
+  });
+
+
+
+
+
+// 사용자 정보 및 캡슐 정보 응답 엔드포인트
+app.post('/users', 
+  
+// JWT 토큰 검증 미들웨어
+  (req, res, next) => {
+    let token = null;
+
+    // 헤더에서 토큰을 가져오기
+    if (req.headers.Authorization) {
+      token = req.headers.Authorization.split('Bearer ')[1];
+    }
+	  console.log(`${token}`);
+	  const secretKey = require('./config/secretkey');
+
+	  jwt.verify(token, secretKey, (err, decoded) => {
+		 if (err) {
+			res.send(err.message);
+			return ;
+		 }
+		 else {
+			console.log("사용자 jwt 토큰 검증 완료");
+
+			req.body.email = decoded.email;
+            req.body.username = decoded.username;
+
+			next();
+		 }
+	  })
+   }, 
+   
+   
+
+  // 실제 엔드포인트 로직
+    (req, res) => {
+    const username= req.body.username;
+	const email=req.body.email;
+
+    try {
+      // receiver 테이블을 통해 해당 이메일과 일치하는 캡슐 ID를 가져오는 쿼리
+      const getCapsuleIDsQuery = 'SELECT capsuleID FROM Receiver WHERE toEmail = ?';
+
+      try {
+        const queryResult = connection.query(getCapsuleIDsQuery, [email]);
+        const capsuleIDResult = queryResult[0]; // 여기서 [0]은 첫 번째 결과를 나타냄
+
+        if (!capsuleIDResult || capsuleIDResult.length === 0) {
+          // 해당하는 캡슐이 없는 경우
+          return res.status(200).json({
+            isSuccess: true,
+            code: '2001',
+            message: '사용자에게 전송된 캡슐이 없습니다.',
+            result: null
+          });
+        }
+
+        const capsuleIDs = capsuleIDResult.map(row => row.capsuleID);
+
+        // 해당 사용자의 캡슐 정보를 가져오는 쿼리
+        const getCapsulesQuery = `
+          SELECT 
+            Capsule.capsuleID, 
+            Capsule.senderID, 
+            Capsule.send_at, 
+            Capsule.arrive_at, 
+            Capsule.music, 
+            Capsule.theme,
+            User.username,
+            Contents.imageUrl, 
+            Contents.text
+          FROM Capsule
+          INNER JOIN User ON Capsule.senderID = User.memberID
+          INNER JOIN Contents ON Capsule.capsuleID = Contents.capsuleID
+          WHERE Capsule.capsuleID IN (?)
+        `;
+
+        const queryResultCapsules = connection.query(getCapsulesQuery, [capsuleIDs]);
+        const capsuleResult = queryResultCapsules[0];
+
+        // 정해진 형식으로 응답 데이터 구성
+        const response = {
+          token:req.headers.Authorization,// JWT Token은 어디서 받아오는지에 따라 적절한 처리가 필요합니다.
+          email: email.toString(),
+          name: username,
+          capsules: capsuleResult.map(capsule => ({
+            id: capsule.capsuleID,
+            writer: capsule.username,
+            writtendate: capsule.send_at,
+            arrivaldate: capsule.arrive_at,
+            cards: [{
+              image: capsule.imageUrl,
+              text: capsule.text
+            }],
+            music: capsule.music,
+            theme: capsule.theme,
+			isChecked: false, // boolean
+          }))
+        };
+
+        // 성공 응답 보내기
+        return res.status(200).json({
+          isSuccess: true,
+          code: '2000',
+          message: '사용자 정보 및 캡슐 정보를 성공적으로 가져왔습니다.',
+          result: response
+        });
+      } catch (err) {
+        console.error('Error executing MySQL query (Capsule IDs):', err);
+        return res.status(500).json({
+          isSuccess: false,
+          code: '5007',
+          message: '캡슐 ID를 가져오는데 실패하였습니다.',
+          result: null
+        });
+      }
+    } catch (err) {
+      console.error('Error executing MySQL queries:', err);
+      return res.status(500).json({
+        isSuccess: false,
+        code: '5000',
+        message: '서버 오류',
+        result: null
+      });
+    }
+  }
+);
+
 
