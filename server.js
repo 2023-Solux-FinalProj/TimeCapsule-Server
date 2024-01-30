@@ -3,6 +3,10 @@ const cors = require('cors');
 const session = require('express-session');
 const mysql = require('mysql');
 const http = require('http');
+const multer = require('multer');
+const fs =require('fs');
+const path=require('path');
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 app.set('view engine', 'ejs');
@@ -24,12 +28,27 @@ app.use(cors({
 
 // app.use(cors(corsOptions));
 
+// 파일이 저장될 디렉터리 설정
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/') // 파일이 저장될 디렉터리 지정
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + '-' + file.originalname);// 파일명 설정
+    }
+});
+
 
 
 
 // .env 파일에서 DB_URL 환경 변수 읽기
 const dbUrl = process.env.DB_URL;
 const port = process.env.PORT;
+
+app.use((req, res, next) => {
+	console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+	next();
+  });
 
 const connection = mysql.createConnection({
     host: dbUrl, // 데이터베이스 호스트
@@ -246,6 +265,7 @@ app.post('/login', async(req, res, next) => {
 // }
 
 
+
 app.post('/capsule', 
 // JWT 토큰 검증
 (req, res, next) => {
@@ -263,32 +283,39 @@ app.post('/capsule',
 		}
 		else {
 			console.log("사용자 jwt 토큰 검증 완료");
+
+			Object.entries(req.body).forEach(([key, value]) => {
+                console.log(`${key}: ${value}`);
+            });
+
 			next();
 		}
 	})
 }, 
-
+    
 	// capsule post 코드
 	(req, res) => {
-	const {
-		receiver,
-		capsule: {
-		writer,
-		writtendate,
-		arrivaldate,
-		cards,
-		music,
-		theme,
-		},
-	} = req.body;
+		Object.entries(req.body).forEach(([key, value]) => {
+			console.log(`${key}: ${value}`);
+		});
+		const receiver = req.body.receiver;
+	    const writer = req.body.writer;
+	    const writtendate = req.body.writtendate;
+	    const arrivaldate = {
+			year: req.body['arrivaldate[year]'],
+			month: req.body['arrivaldate[month]'],
+			day: req.body['arrivaldate[day]']
+		};
+		const cards = req.body;	
+		const music=req.body.music;
+		const theme=req.body.theme;
+		const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
+		const send_at = writtendate;
+		const arrive_at = new Date(arrivalDateString);
 
-	const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
-	const send_at = writtendate;
-	const arrive_at = new Date(arrivalDateString);
-
-	// 1. writer의 memberID 가져오기
-	const getWriterIDQuery = 'SELECT memberID FROM User WHERE username = ?';
-	connection.query(getWriterIDQuery, [writer], (err, userResult) => {
+		// 1. writer의 memberID 가져오기
+		const getWriterIDQuery = 'SELECT memberID FROM User WHERE username = ?';
+		connection.query(getWriterIDQuery, [writer], (err, userResult) => {
 		if (err) {
 		console.error('Error executing MySQL query (User):', err);
 		return res.status(500).json({
@@ -327,7 +354,7 @@ app.post('/capsule',
 
 		// 3. Contents 테이블에 저장
 		const insertContentsQuery = 'INSERT INTO Contents (capsuleID, imageUrl, text) VALUES ?';
-		const cardsData = cards.map((card) => [capsuleID, card.image, card.text]);
+		const cardsData = cards.map((card) => [capsuleID,saveImage(card.image), card.text]);
 
 		connection.query(insertContentsQuery, [cardsData], (err,res) => {
 			if (err) {
@@ -362,10 +389,19 @@ app.post('/capsule',
 	return res.status(200).json({
 		isSuccess: true,
 		code: '2000',
-		message: 'Capsule, contents, and receiver saved to the database successfully',
+		message: '캡슐전송완료!',
 		result: null});
+
+
 });
 
+//이미지 처리를 위한 함수 
+function saveImage(base64Data) {
+	const imageBuffer = Buffer.from(base64Data, 'base64'); // Base64 데이터를 Buffer로 변환
+	const imagePath = path.join(__dirname, 'uploads', uuidv4() + '.png'); // 이미지 파일 경로 설정
+	fs.writeFileSync(imagePath, imageBuffer); // 이미지 파일 저장
+	return imagePath; // 저장된 이미지 파일의 경로 반환
+}
 
 app.put('/capsule/:id', (req, response) => {
 	const capsuleId = req.params.id;
@@ -520,5 +556,6 @@ app.post('/users',
     }
   }
 );
+
 
 
