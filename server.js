@@ -251,6 +251,7 @@ app.post('/login', async(req, res, next) => {
 
 //capsule엔드포인트 로직
 
+
 app.post('/capsule', 
 (req, res, next) => {
     let token = null;
@@ -272,20 +273,26 @@ app.post('/capsule',
 }, 
     
 (req, res) => {
-    const receiver = req.body.receiver;
-    const writer = req.body.writer;
-    const writtendate = req.body.writtendate;
-    const arrivaldate = {
-        year: req.body['arrivaldate[year]'],
-        month: req.body['arrivaldate[month]'],
-        day: req.body['arrivaldate[day]']
-    };
-    const cards = req.body;   
-    const music=req.body.music;
-    const theme=req.body.theme;
-    const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
-    const send_at = writtendate;
-    const arrive_at = new Date(arrivalDateString);
+	const receiver = req.body.receiver;
+        const capsule = req.body.capsule; // "capsule" 객체 추출
+	const writer = capsule.writer;
+	const writtendate = capsule.writtendate;
+	const arrivaldate = capsule.arrivaldate;
+	const cards = capsule.cards;
+	const music = capsule.music;
+	const theme = capsule.theme;
+	
+	// arrivaldate의 값 추출
+	const year = arrivaldate.year;
+	const month = arrivaldate.month;
+	const day = arrivaldate.day;
+	
+	// 날짜 문자열로 변환
+	const arrivalDateString = `${year}-${month}-${day}`;
+	const send_at = writtendate;
+	const arrive_at = new Date(arrivalDateString);
+
+    
 
     const getWriterIDQuery = 'SELECT memberID FROM User WHERE username = ?';
     connection.query(getWriterIDQuery, [writer], (err, userResult) => {
@@ -369,6 +376,12 @@ function saveImage(base64Data) {
     fs.writeFileSync(imagePath, imageBuffer); 
     return imagePath;
 }
+
+
+
+   
+     
+
 
 
 
