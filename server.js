@@ -496,7 +496,7 @@ app.post('/users',
 
         // 정해진 형식으로 응답 데이터 구성
         const response = {
-          token:req.headers.Authorization,// JWT Token은 어디서 받아오는지에 따라 적절한 처리가 필요합니다.
+        //  token:req.headers.Authorization,// JWT Token은 어디서 받아오는지에 따라 적절한 처리가 필요합니다.
           email: email.toString(),
           name: username,
           capsules: capsuleResult.map(capsule => ({
