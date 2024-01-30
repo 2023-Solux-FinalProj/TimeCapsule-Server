@@ -437,7 +437,7 @@ app.post('/users',
 			console.log("사용자 jwt 토큰 검증 완료");
 
 			req.body.email = decoded.email;
-            req.body.username = decoded.username;
+            req.body.username = decoded.name;
 
 			next();
 		 }
