@@ -27,16 +27,6 @@ app.use(cors({
 
 // app.use(cors(corsOptions));
 
-// 파일이 저장될 디렉터리 설정
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/') // 파일이 저장될 디렉터리 지정
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + '-' + file.originalname);// 파일명 설정
-    }
-});
-
 
 
 
@@ -88,10 +78,6 @@ app.get('/', function(req, res){
 // });
 
 // 여기까지 git pull 코드
-
-
-
-
 
 // 쿼리 스트링 라이브러리
 const qs = require("qs");
