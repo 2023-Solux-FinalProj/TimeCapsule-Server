@@ -394,7 +394,7 @@ app.put('/capsule/:id', (req, response) => {
 	const { readState } = req.body;
   
 	// Capsule 테이블의 readState 값을 업데이트하는 SQL 쿼리를 정의합니다.
-	const updateQuery = 'UPDATE Capsule SET readState = ? WHERE capsuleID = ?';
+	const updateQuery = 'UPDATE Receiver SET readState = ? WHERE capsuleID = ?';
   
 	// SQL 쿼리를 실행하여 Capsule 테이블의 readState 값을 업데이트합니다.
 	connection.query(updateQuery, [readState, capsuleId], (error, res) => {
