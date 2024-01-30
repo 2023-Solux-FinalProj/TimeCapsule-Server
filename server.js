@@ -420,6 +420,7 @@ app.post('/users',
     let token = null;
 
     // 헤더에서 토큰을 가져오기
+    console.log(req.headers.authorization);
     if (req.headers.authorization) {
       token = req.headers.authorization.split('Bearer ')[1];
     }
