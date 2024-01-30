@@ -249,143 +249,133 @@ app.post('/login', async(req, res, next) => {
 // 	})
 // }
 
-
+//capsule엔드포인트 로직
 
 app.post('/capsule', 
-// JWT 토큰 검증
 (req, res, next) => {
-	let token = null;
-	if (req.headers.authorization) {
-		token = req.headers.authorization.split('Bearer ')[1];
-	}
-	//console.log(`${token}`);
-	const secretKey = require('./config/secretkey');
+    let token = null;
+    if (req.headers.authorization) {
+        token = req.headers.authorization.split('Bearer ')[1];
+    }
+    const secretKey = require('./config/secretkey');
 
-	jwt.verify(token, secretKey, (err, decoded) => {
-		if (err) {
-			res.send(err.message);
-			return ;
-		}
-		else {
-			console.log("사용자 jwt 토큰 검증 완료");
-
-			next();
-		}
-	})
+    jwt.verify(token, secretKey, (err, decoded) => {
+        if (err) {
+            res.send(err.message);
+            return ;
+        }
+        else {
+            console.log("사용자 jwt 토큰 검증 완료");
+            next();
+        }
+    })
 }, 
     
-	// capsule post 코드
-	(req, res) => {
-		
-	    const receiver = req.body.receiver;
-	    const writer = req.body.writer;
-	    const writtendate = req.body.writtendate;
-	    const arrivaldate = {
-			year: req.body['arrivaldate[year]'],
-			month: req.body['arrivaldate[month]'],
-			day: req.body['arrivaldate[day]']
-		};
-		const cards = req.body;	
-		const music=req.body.music;
-		const theme=req.body.theme;
-		const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
-		const send_at = writtendate;
-		const arrive_at = new Date(arrivalDateString);
+(req, res) => {
+    const receiver = req.body.receiver;
+    const writer = req.body.writer;
+    const writtendate = req.body.writtendate;
+    const arrivaldate = {
+        year: req.body['arrivaldate[year]'],
+        month: req.body['arrivaldate[month]'],
+        day: req.body['arrivaldate[day]']
+    };
+    const cards = req.body;   
+    const music=req.body.music;
+    const theme=req.body.theme;
+    const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
+    const send_at = writtendate;
+    const arrive_at = new Date(arrivalDateString);
 
-		Object.entries(req.body).forEach(([key, value]) => {
-		console.log(`${key}: ${value}`);
-		});
+    const getWriterIDQuery = 'SELECT memberID FROM User WHERE username = ?';
+    connection.query(getWriterIDQuery, [writer], (err, userResult) => {
+        if (err) {
+            console.error('Error executing MySQL query (User):', err);
+            return res.status(500).json({
+                isSuccess: false,
+                code: '5000',
+                message: 'memberID를 User테이블에서 불러오는데 실패하였습니다. ',
+                result: null
+            });
+        }
 
-		// 1. writer의 memberID 가져오기
-		const getWriterIDQuery = 'SELECT memberID FROM User WHERE username = ?';
-		connection.query(getWriterIDQuery, [writer], (err, userResult) => {
-		if (err) {
-		console.error('Error executing MySQL query (User):', err);
-		return res.status(500).json({
-			isSuccess: false,
-			code: '5000',
-			message: 'memberID를 User테이블에서 불러오는데 실패하였습니다. ',
-			result: null
-		});
-		}
+        if (userResult.length === 0) {
+            return res.status(400).json({
+                isSuccess: false,
+                code: '4001',
+                message: '유효하지않은 username입니다.',
+                result: null
+            });
+        }
 
-		if (userResult.length === 0) {
-		return res.status(400).json({
-			isSuccess: false,
-			code: '4001',
-			message: '유효하지않은 username입니다.',
-			result: null
-		});
-		}
+        const memberID = userResult[0].memberID;
 
-		const memberID = userResult[0].memberID;
+        const insertCapsuleQuery = 'INSERT INTO Capsule (senderID, send_at, arrive_at, music, theme) VALUES (?, ?, ?, ?, ?)';
+        connection.query(insertCapsuleQuery, [memberID, send_at, arrive_at, music, theme], (err, capsuleResult) => {
+            if (err) {
+                console.error('Error executing MySQL query (Capsule):', err);
+                return res.status(500).json({
+                    isSuccess: false,
+                    code: '5001',
+                    message: 'capsule정보 db에 저장실패. ',
+                    result: null
+                });
+            }
 
-		// 2. Capsule 테이블에 저장
-		const insertCapsuleQuery = 'INSERT INTO Capsule (senderID, send_at, arrive_at, music, theme) VALUES (?, ?, ?, ?, ?)';
-		connection.query(insertCapsuleQuery, [memberID, send_at, arrive_at, music, theme], (err, capsuleResult) => {
-		if (err) {
-			console.error('Error executing MySQL query (Capsule):', err);
-			return res.status(500).json({
-			isSuccess: false,
-			code: '5001',
-			message: 'capsule정보 db에 저장실패. ',
-			result: null
-			});
-		}
+            const capsuleID = capsuleResult.insertId;
 
-		const capsuleID = capsuleResult.insertId;
+            const insertContentsQuery = 'INSERT INTO Contents (capsuleID, imageUrl, text) VALUES ?';
+            const cardsData = cards.map((card) => [capsuleID,saveImage(card.image), card.text]);
 
-		// 3. Contents 테이블에 저장
-		const insertContentsQuery = 'INSERT INTO Contents (capsuleID, imageUrl, text) VALUES ?';
-		const cardsData = cards.map((card) => [capsuleID,saveImage(card.image), card.text]);
+            connection.query(insertContentsQuery, [cardsData], (err, contentResult) => {
+                if (err) {
+                    console.error('Error executing MySQL query (Contents):', err);
+                    return res.status(500).json({
+                        isSuccess: false,
+                        code: '5002',
+                        message: 'Failed to save contents to the database',
+                        result: null
+                    });
+                }
 
-		connection.query(insertContentsQuery, [cardsData], (err,res) => {
-			if (err) {
-			console.error('Error executing MySQL query (Contents):', err);
-			return res.status(500).json({
-				isSuccess: false,
-				code: '5002',
-				message: 'Failed to save contents to the database',
-				result: null
-			});
-			}
+                const insertReceiverQuery = 'INSERT INTO Receiver (capsuleID, toEmail) VALUES (?, ?)';
+                connection.query(insertReceiverQuery, [capsuleID, receiver], (err, receiverResult) => {
+                    if (err) {
+                        console.error('Error executing MySQL query (Receiver):', err);
+                        return res.status(500).json({
+                            isSuccess: false,
+                            code: '5003',
+                            message: 'Failed to save receiver to the database',
+                            result: null
+                        });
+                    }
 
-			// 4. Receiver 테이블에 저장
-			const insertReceiverQuery = 'INSERT INTO Receiver (capsuleID, toEmail) VALUES (?, ?)';
-			connection.query(insertReceiverQuery, [capsuleID, receiver], (err, res) => {
-			if (err) {
-				console.error('Error executing MySQL query (Receiver):', err);
-				return res.status(500).json({
-				isSuccess: false,
-				code: '5003',
-				message: 'Failed to save receiver to the database',
-				result: null
-				});
-			}
-
-			});
-		});
-		});
-	});
-	console.log('모든 정보 DB에 저장 완료!');
-	// 성공 응답 보내기
-	return res.status(200).json({
-		isSuccess: true,
-		code: '2000',
-		message: '캡슐전송완료!',
-		result: null});
-
-
+                    console.log('모든 정보 DB에 저장 완료!');
+                    return res.status(200).json({
+                        isSuccess: true,
+                        code: '2000',
+                        message: '캡슐전송완료!',
+                        result: null
+                    });
+                });
+            });
+        });
+    });
 });
 
-//이미지 처리를 위한 함수 
 function saveImage(base64Data) {
-	const imageBuffer = Buffer.from(base64Data, 'base64'); // Base64 데이터를 Buffer로 변환
-	const imagePath = path.join(__dirname, 'uploads', uuidv4() + '.png'); // 이미지 파일 경로 설정
-	fs.writeFileSync(imagePath, imageBuffer); // 이미지 파일 저장
-	return imagePath; // 저장된 이미지 파일의 경로 반환
+    const imageBuffer = Buffer.from(base64Data, 'base64'); 
+    const imagePath = path.join(__dirname, 'uploads', uuidv4() + '.png'); 
+    fs.writeFileSync(imagePath, imageBuffer); 
+    return imagePath;
 }
 
+
+
+
+
+	
+	
 app.put('/capsule/:id', (req, response) => {
 	const capsuleId = req.params.id;
 	const { readState } = req.body;
