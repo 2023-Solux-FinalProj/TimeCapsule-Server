@@ -410,8 +410,7 @@ app.put('/capsule/:id', (req, response) => {
 	});
   });
 
-
-
+//users 엔드포인트 로직직
 
 app.post('/users', 
   
@@ -420,7 +419,7 @@ app.post('/users',
     let token = null;
 
     // 헤더에서 토큰을 가져오기
-    console.log(req.headers.authorization);
+	console.log(req.headers.authorization);
     if (req.headers.authorization) {
       token = req.headers.authorization.split('Bearer ')[1];
     }
@@ -437,7 +436,7 @@ app.post('/users',
 			console.log("사용자 jwt 토큰 검증 완료");
 
 			req.body.email = decoded.email;
-                        req.body.username = decoded.username;
+            req.body.username = decoded.username;
 
 			next();
 		 }
@@ -448,7 +447,7 @@ app.post('/users',
 
   // 실제 엔드포인트 로직
     (req, res) => {
-        const username= req.body.username;
+    const username= req.body.username;
 	const email=req.body.email;
 
     try {
@@ -459,14 +458,24 @@ app.post('/users',
         const queryResult = connection.query(getCapsuleIDsQuery, [email]);
         const capsuleIDResult = queryResult[0]; // 여기서 [0]은 첫 번째 결과를 나타냄
 
+
+		const response1= {
+			token: req.headers.Authorization,
+			email: email.toString(),
+			name: username,
+			capsules: [], // 빈 배열로 초기화
+		  };
+
+		
+
         if (!capsuleIDResult || capsuleIDResult.length === 0) {
           // 해당하는 캡슐이 없는 경우
-	  console.log("사용자에게 전송된 캡슐이 없습니다!");
+		  console.log("사용자에게 전송된 캡슐이 없습니다",response1);
           return res.status(200).json({
             isSuccess: true,
             code: '2001',
             message: '사용자에게 전송된 캡슐이 없습니다.',
-            result: null
+            result:response1
           });
         }
 
@@ -494,7 +503,7 @@ app.post('/users',
         const capsuleResult = queryResultCapsules[0];
 
         // 정해진 형식으로 응답 데이터 구성
-        const response = {
+        const response2 = {
           token:req.headers.Authorization,// JWT Token은 어디서 받아오는지에 따라 적절한 처리가 필요합니다.
           email: email.toString(),
           name: username,
@@ -514,12 +523,12 @@ app.post('/users',
         };
 
         // 성공 응답 보내기
-		console.log('Success Response:', response);
+		console.log('Success Response:',response2);
         return res.status(200).json({
           isSuccess: true,
           code: '2000',
           message: '사용자 정보 및 캡슐 정보를 성공적으로 가져왔습니다.',
-          result: response
+          result: response2
         });
 		
 	
@@ -543,6 +552,12 @@ app.post('/users',
     }
   }
 );
+
+
+
+
+
+	
 
 
 
