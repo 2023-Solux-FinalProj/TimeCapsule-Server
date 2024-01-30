@@ -389,29 +389,31 @@ function saveImage(base64Data) {
     
 
 
-app.put('/capsule/:id', (req, response) => {
+app.put('/capsule/:id', (req, res) => {
 	const capsuleId = req.params.id;
 	const { readState } = req.body;
   
 	// Capsule 테이블의 readState 값을 업데이트하는 SQL 쿼리를 정의합니다.
-	const updateQuery = 'UPDATE Receiver SET readState = ? WHERE capsuleID = ?';
+	const updateQuery = 'UPDATE Reciever SET readState = ? WHERE capsuleID = ?';
   
 	// SQL 쿼리를 실행하여 Capsule 테이블의 readState 값을 업데이트합니다.
-	connection.query(updateQuery, [readState, capsuleId], (error, res) => {
+	connection.query(updateQuery, [readState, capsuleId], (error,result) => {
 	  if (error) {
 		console.error('Error updating readState:', error);
 		return res.status(500).json({
 		  success: false,
-		  message: 'Failed to update readState'
+		  message: 'readState 변경실패 '
 		});
 	  }
 	  console.log('Read state updated successfully');
 	  return res.status(200).json({
 		success: true,
-		message: 'Read state updated successfully'
+		message: 'readstate 변경완료!'
 	  });
 	});
   });
+
+
 
 
 
