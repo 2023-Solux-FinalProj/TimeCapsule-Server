@@ -461,6 +461,7 @@ app.post('/users',
 
         if (!capsuleIDResult || capsuleIDResult.length === 0) {
           // 해당하는 캡슐이 없는 경우
+	  console.log("사용자에게 전송된 캡슐이 없습니다!");
           return res.status(200).json({
             isSuccess: true,
             code: '2001',
