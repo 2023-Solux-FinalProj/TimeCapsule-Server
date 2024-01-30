@@ -6,6 +6,7 @@ const http = require('http');
 const fs =require('fs');
 const path=require('path');
 const { v4: uuidv4 } = require('uuid');
+const multer  = require('multer');
 
 const app = express();
 app.set('view engine', 'ejs');
@@ -26,7 +27,6 @@ app.use(cors({
 // };
 
 // app.use(cors(corsOptions));
-
 
 
 
@@ -72,8 +72,16 @@ app.get('/', function(req, res){
 
 
 
+// /send 응답 
+// app.get('/capsule', (req, res) => {
+// 	res.send('캡슐이 전송 되었습니다!---정보저장중!');
+// });
 
 // 여기까지 git pull 코드
+
+
+
+
 
 // 쿼리 스트링 라이브러리
 const qs = require("qs");
@@ -245,7 +253,15 @@ app.post('/login', async(req, res, next) => {
 // 	})
 // }
 
-//capsule엔드포인트 로직
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/') // 이미지를 저장할 폴더 설정
+    },
+    filename: function (req, file, cb) {
+        cb(null, uuidv4() + path.extname(file.originalname)) // 파일명 설정
+    }
+});
+const upload = multer({ storage: storage });
 
 
 app.post('/capsule', 
@@ -268,102 +284,99 @@ app.post('/capsule',
     })
 }, 
     
-(req, res) => {
-    
-    const receiver = req.body.fields.receiver;
-	
-    const writer = req.body.fields.writer;
-    const writtendate = req.body.fields.writtendate;
+upload.array('cards[i][image]'),(req, res) => {
+	const receiver = req.body.receiver;
+            const writer = req.body.writer;
+            const writtendate = req.body.writtendate;
+            const arrivaldate = {
+                year: req.body['arrivaldate[year]'],
+                month: req.body['arrivaldate[month]'],
+                day: req.body['arrivaldate[day]']
+            };
+            const cards = req.body.cards;   
+            const music = req.body.music;
+            const theme = req.body.theme;
+            const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
+            const send_at = writtendate;
+            const arrive_at = new Date(arrivalDateString);
 
-    const arrivaldate = {
-        year: req.body.fields['arrivaldate[year]'],
-        month: req.body.fields['arrivaldate[month]'],
-        day: req.body.fields['arrivaldate[day]']
-    };
-    const cards = req.body.fields.cards;   
-    const music=req.body.fields.music;
-    const theme=req.body.fields.theme;
-    const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
-    const send_at = writtendate;
-    const arrive_at = new Date(arrivalDateString);
+            console.log(receiver, writer, writtendate, arrive_at, music, theme);
 
-	console.log(receiver,writer,writtendate,arrive_at,music,theme);
-
-    const getWriterIDQuery = 'SELECT memberID FROM User WHERE username = ?';
-    connection.query(getWriterIDQuery, [writer], (err, userResult) => {
-        if (err) {
-            console.error('Error executing MySQL query (User):', err);
-            return res.status(500).json({
-                isSuccess: false,
-                code: '5000',
-                message: 'memberID를 User테이블에서 불러오는데 실패하였습니다. ',
-                result: null
-            });
-        }
-
-        if (userResult.length === 0) {
-            return res.status(400).json({
-                isSuccess: false,
-                code: '4001',
-                message: '유효하지않은 username입니다.',
-                result: null
-            });
-        }
-
-        const memberID = userResult[0].memberID;
-
-        const insertCapsuleQuery = 'INSERT INTO Capsule (senderID, send_at, arrive_at, music, theme) VALUES (?, ?, ?, ?, ?)';
-        connection.query(insertCapsuleQuery, [memberID, send_at, arrive_at, music, theme], (err, capsuleResult) => {
-            if (err) {
-                console.error('Error executing MySQL query (Capsule):', err);
-                return res.status(500).json({
-                    isSuccess: false,
-                    code: '5001',
-                    message: 'capsule정보 db에 저장실패. ',
-                    result: null
-                });
-            }
-
-            const capsuleID = capsuleResult.insertId;
-
-            const insertContentsQuery = 'INSERT INTO Contents (capsuleID, imageUrl, text) VALUES ?';
-            const cardsData = cards.map((card) => [capsuleID,saveImage(card.image), card.text]);
-
-            connection.query(insertContentsQuery, [cardsData], (err, contentResult) => {
+            const getWriterIDQuery = 'SELECT memberID FROM User WHERE username = ?';
+            connection.query(getWriterIDQuery, [writer], (err, userResult) => {
                 if (err) {
-                    console.error('Error executing MySQL query (Contents):', err);
+                    console.error('Error executing MySQL query (User):', err);
                     return res.status(500).json({
                         isSuccess: false,
-                        code: '5002',
-                        message: 'Failed to save contents to the database',
+                        code: '5000',
+                        message: 'memberID를 User테이블에서 불러오는데 실패하였습니다. ',
                         result: null
                     });
                 }
 
-                const insertReceiverQuery = 'INSERT INTO Receiver (capsuleID, toEmail) VALUES (?, ?)';
-                connection.query(insertReceiverQuery, [capsuleID, receiver], (err, receiverResult) => {
+                if (userResult.length === 0) {
+                    return res.status(400).json({
+                        isSuccess: false,
+                        code: '4001',
+                        message: '유효하지않은 username입니다.',
+                        result: null
+                    });
+                }
+
+                const memberID = userResult[0].memberID;
+
+                const insertCapsuleQuery = 'INSERT INTO Capsule (senderID, send_at, arrive_at, music, theme) VALUES (?, ?, ?, ?, ?)';
+                connection.query(insertCapsuleQuery, [memberID, send_at, arrive_at, music, theme], (err, capsuleResult) => {
                     if (err) {
-                        console.error('Error executing MySQL query (Receiver):', err);
+                        console.error('Error executing MySQL query (Capsule):', err);
                         return res.status(500).json({
                             isSuccess: false,
-                            code: '5003',
-                            message: 'Failed to save receiver to the database',
+                            code: '5001',
+                            message: 'capsule정보 db에 저장실패. ',
                             result: null
                         });
                     }
 
-                    console.log('모든 정보 DB에 저장 완료!');
-                    return res.status(200).json({
-                        isSuccess: true,
-                        code: '2000',
-                        message: '캡슐전송완료!',
-                        result: null
+                    const capsuleID = capsuleResult.insertId;
+
+                    const insertContentsQuery = 'INSERT INTO Contents (capsuleID, imageUrl, text) VALUES ?';
+                    const cardsData = cards.map((card) => [capsuleID, saveImage(card.image), card.text]);
+
+                    connection.query(insertContentsQuery, [cardsData], (err, contentResult) => {
+                        if (err) {
+                            console.error('Error executing MySQL query (Contents):', err);
+                            return res.status(500).json({
+                                isSuccess: false,
+                                code: '5002',
+                                message: 'Failed to save contents to the database',
+                                result: null
+                            });
+                        }
+
+                        const insertReceiverQuery = 'INSERT INTO Receiver (capsuleID, toEmail) VALUES (?, ?)';
+                        connection.query(insertReceiverQuery, [capsuleID, receiver], (err, receiverResult) => {
+                            if (err) {
+                                console.error('Error executing MySQL query (Receiver):', err);
+                                return res.status(500).json({
+                                    isSuccess: false,
+                                    code: '5003',
+                                    message: 'Failed to save receiver to the database',
+                                    result: null
+                                });
+                            }
+
+                            console.log('모든 정보 DB에 저장 완료!');
+                            return res.status(200).json({
+                                isSuccess: true,
+                                code: '2000',
+                                message: '캡슐전송완료!',
+                                result: null
+                            });
+                        });
                     });
                 });
             });
         });
-    });
-});
 
 function saveImage(base64Data) {
     const imageBuffer = Buffer.from(base64Data, 'base64'); 
@@ -372,9 +385,10 @@ function saveImage(base64Data) {
     return imagePath;
 }
 
+	
+    
 
-	
-	
+
 app.put('/capsule/:id', (req, response) => {
 	const capsuleId = req.params.id;
 	const { readState } = req.body;
@@ -399,10 +413,12 @@ app.put('/capsule/:id', (req, response) => {
 	});
   });
 
-//users 엔드포인트 로직
 
+
+
+
+// 사용자 정보 및 캡슐 정보 응답 엔드포인트
 app.post('/users', 
-	 
   
 // JWT 토큰 검증 미들웨어
   (req, res, next) => {
@@ -536,15 +552,6 @@ app.post('/users',
     }
   }
 );
-
-
-
-			
-	
-
-	
-    
-	
 
 
 
