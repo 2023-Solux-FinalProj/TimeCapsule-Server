@@ -269,10 +269,6 @@ app.post('/capsule',
 		else {
 			console.log("사용자 jwt 토큰 검증 완료");
 
-			Object.entries(req.body).forEach(([key, value]) => {
-                console.log(`${key}: ${value}`);
-            });
-
 			next();
 		}
 	})
@@ -280,10 +276,8 @@ app.post('/capsule',
     
 	// capsule post 코드
 	(req, res) => {
-		Object.entries(req.body).forEach(([key, value]) => {
-			console.log(`${key}: ${value}`);
-		});
-		const receiver = req.body.receiver;
+		
+	    const receiver = req.body.receiver;
 	    const writer = req.body.writer;
 	    const writtendate = req.body.writtendate;
 	    const arrivaldate = {
@@ -297,6 +291,10 @@ app.post('/capsule',
 		const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
 		const send_at = writtendate;
 		const arrive_at = new Date(arrivalDateString);
+
+		Object.entries(req.body).forEach(([key, value]) => {
+		console.log(`${key}: ${value}`);
+		});
 
 		// 1. writer의 memberID 가져오기
 		const getWriterIDQuery = 'SELECT memberID FROM User WHERE username = ?';
@@ -438,7 +436,7 @@ app.post('/users',
 			console.log("사용자 jwt 토큰 검증 완료");
 
 			req.body.email = decoded.email;
-            req.body.username = decoded.username;
+                        req.body.username = decoded.username;
 
 			next();
 		 }
@@ -449,7 +447,7 @@ app.post('/users',
 
   // 실제 엔드포인트 로직
     (req, res) => {
-    const username= req.body.username;
+        const username= req.body.username;
 	const email=req.body.email;
 
     try {
