@@ -272,6 +272,9 @@ app.post('/capsule',
     const receiver = req.body.receiver;
     const writer = req.body.writer;
     const writtendate = req.body.writtendate;
+	console.log(receiver);
+	console.log(writer);
+	console.log(writtendate);
     const arrivaldate = {
         year: req.body['arrivaldate[year]'],
         month: req.body['arrivaldate[month]'],
