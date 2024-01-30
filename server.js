@@ -415,8 +415,6 @@ app.put('/capsule/:id', (req, response) => {
 
 
 
-
-// 사용자 정보 및 캡슐 정보 응답 엔드포인트
 app.post('/users', 
   
 // JWT 토큰 검증 미들웨어
@@ -424,14 +422,15 @@ app.post('/users',
     let token = null;
 
     // 헤더에서 토큰을 가져오기
-    if (req.headers.Authorization) {
-      token = req.headers.Authorization.split('Bearer ')[1];
+    if (req.headers.authorization) {
+      token = req.headers.authorization.split('Bearer ')[1];
     }
 	  console.log(`${token}`);
 	  const secretKey = require('./config/secretkey');
 
 	  jwt.verify(token, secretKey, (err, decoded) => {
 		 if (err) {
+			console.error('Error verifying JWT token:', err);
 			res.send(err.message);
 			return ;
 		 }
@@ -496,7 +495,7 @@ app.post('/users',
 
         // 정해진 형식으로 응답 데이터 구성
         const response = {
-        //  token:req.headers.Authorization,// JWT Token은 어디서 받아오는지에 따라 적절한 처리가 필요합니다.
+          token:req.headers.Authorization,// JWT Token은 어디서 받아오는지에 따라 적절한 처리가 필요합니다.
           email: email.toString(),
           name: username,
           capsules: capsuleResult.map(capsule => ({
@@ -515,12 +514,15 @@ app.post('/users',
         };
 
         // 성공 응답 보내기
+		console.log('Success Response:', response);
         return res.status(200).json({
           isSuccess: true,
           code: '2000',
           message: '사용자 정보 및 캡슐 정보를 성공적으로 가져왔습니다.',
           result: response
         });
+		
+	
       } catch (err) {
         console.error('Error executing MySQL query (Capsule IDs):', err);
         return res.status(500).json({
