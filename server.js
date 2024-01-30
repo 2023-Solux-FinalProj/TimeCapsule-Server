@@ -410,9 +410,10 @@ app.put('/capsule/:id', (req, response) => {
 	});
   });
 
-//users 엔드포인트 로직직
+//users 엔드포인트 로직
 
 app.post('/users', 
+	 
   
 // JWT 토큰 검증 미들웨어
   (req, res, next) => {
@@ -460,7 +461,7 @@ app.post('/users',
 
 
 		const response1= {
-			token: req.headers.Authorization,
+			token: req.headers.authorization,
 			email: email.toString(),
 			name: username,
 			capsules: [], // 빈 배열로 초기화
@@ -472,9 +473,6 @@ app.post('/users',
           // 해당하는 캡슐이 없는 경우
 		  console.log("사용자에게 전송된 캡슐이 없습니다",response1);
           return res.status(200).json({
-            isSuccess: true,
-            code: '2001',
-            message: '사용자에게 전송된 캡슐이 없습니다.',
             result:response1
           });
         }
@@ -525,9 +523,6 @@ app.post('/users',
         // 성공 응답 보내기
 		console.log('Success Response:',response2);
         return res.status(200).json({
-          isSuccess: true,
-          code: '2000',
-          message: '사용자 정보 및 캡슐 정보를 성공적으로 가져왔습니다.',
           result: response2
         });
 		
@@ -555,8 +550,11 @@ app.post('/users',
 
 
 
+			
+	
 
-
+	
+    
 	
 
 
