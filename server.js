@@ -270,19 +270,19 @@ app.post('/capsule',
     
 (req, res) => {
     
-    const receiver = req.fields.receiver;
+    const receiver = req.body.fields.receiver;
 	
-    const writer = req.fields.writer;
-    const writtendate = req.fields.writtendate;
+    const writer = req.body.fields.writer;
+    const writtendate = req.body.fields.writtendate;
 
     const arrivaldate = {
-        year: req.fields['arrivaldate[year]'],
-        month: req.fields['arrivaldate[month]'],
-        day: req.fields['arrivaldate[day]']
+        year: req.body.fields['arrivaldate[year]'],
+        month: req.body.fields['arrivaldate[month]'],
+        day: req.body.fields['arrivaldate[day]']
     };
-    const cards = req.fields.cards;   
-    const music=req.fields.music;
-    const theme=req.fields.theme;
+    const cards = req.body.fields.cards;   
+    const music=req.body.fields.music;
+    const theme=req.body.fields.theme;
     const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
     const send_at = writtendate;
     const arrive_at = new Date(arrivalDateString);
