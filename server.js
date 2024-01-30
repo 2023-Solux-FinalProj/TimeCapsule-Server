@@ -269,23 +269,25 @@ app.post('/capsule',
 }, 
     
 (req, res) => {
-    const receiver = req.body.receiver;
-    const writer = req.body.writer;
-    const writtendate = req.body.writtendate;
-	console.log(receiver);
-	console.log(writer);
-	console.log(writtendate);
+    
+    const receiver = req.fields.receiver;
+	
+    const writer = req.fields.writer;
+    const writtendate = req.fields.writtendate;
+
     const arrivaldate = {
-        year: req.body['arrivaldate[year]'],
-        month: req.body['arrivaldate[month]'],
-        day: req.body['arrivaldate[day]']
+        year: req.fields['arrivaldate[year]'],
+        month: req.fields['arrivaldate[month]'],
+        day: req.fields['arrivaldate[day]']
     };
-    const cards = req.body;   
-    const music=req.body.music;
-    const theme=req.body.theme;
+    const cards = req.fields.cards;   
+    const music=req.fields.music;
+    const theme=req.fields.theme;
     const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
     const send_at = writtendate;
     const arrive_at = new Date(arrivalDateString);
+
+	console.log(receiver,writer,writtendate,arrive_at,music,theme);
 
     const getWriterIDQuery = 'SELECT memberID FROM User WHERE username = ?';
     connection.query(getWriterIDQuery, [writer], (err, userResult) => {
