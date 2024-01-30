@@ -3,7 +3,6 @@ const cors = require('cors');
 const session = require('express-session');
 const mysql = require('mysql');
 const http = require('http');
-const multer = require('multer');
 const fs =require('fs');
 const path=require('path');
 const { v4: uuidv4 } = require('uuid');
