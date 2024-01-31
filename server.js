@@ -495,7 +495,7 @@ app.post('/users',
         const capsuleResult = await query(getCapsulesQuery, [capsuleIDs]); // 비동기 쿼리 실행
 
         const response2 = {
-          token: req.headers.Authorization, // JWT Token은 어디서 받아오는지에 따라 적절한 처리가 필요합니다.
+          token: req.headers.authorization, // JWT Token은 어디서 받아오는지에 따라 적절한 처리가 필요합니다.
           email: email.toString(),
           name: username,
           capsules: capsuleResult.map(capsule => ({
