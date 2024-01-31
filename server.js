@@ -415,129 +415,133 @@ app.put('/capsule/:id', (req, res) => {
 
 
 
-
 app.post('/users', 
   
-// JWT 토큰 검증 미들웨어
+  // JWT 토큰 검증 미들웨어
   (req, res, next) => {
     let token = null;
 
     // 헤더에서 토큰을 가져오기
-	console.log(req.headers.authorization);
+    console.log(req.headers.authorization);
     if (req.headers.authorization) {
       token = req.headers.authorization.split('Bearer ')[1];
     }
-	  console.log(`${token}`);
-	  const secretKey = require('./config/secretkey');
+    console.log(`${token}`);
+    const secretKey = require('./config/secretkey');
 
-	  jwt.verify(token, secretKey, (err, decoded) => {
-		 if (err) {
-			console.error('Error verifying JWT token:', err);
-			res.send(err.message);
-			return ;
-		 }
-		 else {
-			console.log("사용자 jwt 토큰 검증 완료");
+    jwt.verify(token, secretKey, (err, decoded) => {
+      if (err) {
+        console.error('Error verifying JWT token:', err);
+        res.send(err.message);
+        return;
+      } else {
+        console.log("사용자 jwt 토큰 검증 완료");
 
-			req.body.email = decoded.email;
-            req.body.username = decoded.name;
+        req.body.email = decoded.email;
+        req.body.username = decoded.name;
 
-			next();
-		 }
-	  })
-   }, 
-   
-   
+        next();
+      }
+    })
+  }, 
 
   // 실제 엔드포인트 로직
-    (req, res) => {
-    const username= req.body.username;
-	const email=req.body.email;
+  (req, res) => {
+    const username = req.body.username;
+    const email = req.body.email;
 
+    try {
+      // receiver 테이블을 통해 해당 이메일과 일치하는 캡슐 ID를 가져오는 쿼리
+      const getCapsuleIDsQuery = 'SELECT capsuleID FROM Receiver WHERE toEmail = ?';
 
-	const getCapsuleIDsQuery = 'SELECT capsuleID FROM Receiver WHERE toEmail = ?';
+      connection.query(getCapsuleIDsQuery, [email])
+        .then((queryResult) => {
+          const capsuleIDResult = queryResult[0]; // 여기서 [0]은 첫 번째 결과를 나타냄 //첫번째 캡슐의 아이디
 
-    connection.query(getCapsuleIDsQuery, [email], (error, capsuleIDResult) => {
-        if (error) {
-            console.error('Error executing MySQL query (Capsule IDs):', error);
-            return res.status(500).json({
-                isSuccess: false,
-                code: '5007',
-                message: '캡슐 ID를 가져오는데 실패하였습니다.',
-                result: null
-            });
-        }
+          const response1 = {
+            token: req.headers.authorization,
+            email: email.toString(),
+            name: username,
+            capsules: [], // 빈 배열로 초기화
+          };
 
-        if (!capsuleIDResult || capsuleIDResult.length === 0) {
+          if (!capsuleIDResult || capsuleIDResult.length === 0) {
             // 해당하는 캡슐이 없는 경우
-            console.log("사용자에게 전송된 캡슐이 없습니다");
-            const response1 = {
-                token: req.headers.authorization,
-                email: email.toString(),
-                name: username,
-                capsules: []
-            };
+            console.log("사용자에게 전송된 캡슐이 없습니다", response1);
             return res.status(200).json({
-                result: response1
+              result: response1
             });
-        }
+          } else {
+            const capsuleIDs = capsuleIDResult.map(row => row.capsuleID);
+            // 해당 사용자의 캡슐 정보를 가져오는 쿼리
+            const getCapsulesQuery = `
+              SELECT 
+                Capsule.capsuleID, 
+                Capsule.senderID, 
+                Capsule.send_at, 
+                Capsule.arrive_at, 
+                Capsule.music, 
+                Capsule.theme,
+                User.username,
+                Contents.imageUrl, 
+                Contents.text
+              FROM Capsule
+              INNER JOIN User ON Capsule.senderID = User.memberID
+              INNER JOIN Contents ON Capsule.capsuleID = Contents.capsuleID
+              WHERE Capsule.capsuleID IN (?)
+              `;
 
-        const capsuleIDs = capsuleIDResult.map(row => row.capsuleID);
+            return connection.query(getCapsulesQuery, [capsuleIDs]);
+          }
+        })
+        .then((queryResultCapsules) => {
+          const capsuleResult = queryResultCapsules[0];
+          const response2 = {
+            token: req.headers.authorization, // JWT Token은 어디서 받아오는지에 따라 적절한 처리가 필요합니다.
+            email: email.toString(),
+            name: username,
+            capsules: capsuleResult.map(capsule => ({
+              id: capsule.capsuleID,
+              writer: capsule.username,
+              writtendate: capsule.send_at,
+              arrivaldate: capsule.arrive_at,
+              cards: [{
+                image: capsule.imageUrl,
+                text: capsule.text
+              }],
+              music: capsule.music,
+              theme: capsule.theme,
+              isChecked: false, // boolean
+            }))
+          };
 
-        // 해당 사용자의 캡슐 정보를 가져오는 쿼리
-        const getCapsulesQuery = `
-            SELECT 
-            Capsule.capsuleID, 
-            Capsule.senderID, 
-            Capsule.send_at, 
-            Capsule.arrive_at, 
-            Capsule.music, 
-            Capsule.theme,
-            User.username,
-            Contents.imageUrl, 
-            Contents.text
-            FROM Capsule
-            INNER JOIN User ON Capsule.senderID = User.memberID
-            INNER JOIN Contents ON Capsule.capsuleID = Contents.capsuleID
-            WHERE Capsule.capsuleID IN (?)`;
-
-        connection.query(getCapsulesQuery, [capsuleIDs], (err, capsuleResult) => {
-            if (err) {
-                console.error('Error executing MySQL query (Capsules):', err);
-                return res.status(500).json({
-                    isSuccess: false,
-                    code: '5008',
-                    message: '캡슐 정보를 가져오는데 실패하였습니다.',
-                    result: null
-                });
-            }
-
-            const response = {
-                token: req.headers.Authorization, // JWT Token은 어디서 받아오는지에 따라 적절한 처리가 필요합니다.
-                email: email.toString(),
-                name: username,
-                capsules: capsuleResult.map(capsule => ({
-                    id: capsule.capsuleID,
-                    writer: capsule.username,
-                    writtendate: capsule.send_at,
-                    arrivaldate: capsule.arrive_at,
-                    cards: [{
-                        image: capsule.imageUrl,
-                        text: capsule.text
-                    }],
-                    music: capsule.music,
-                    theme: capsule.theme,
-                    isChecked: false, // boolean
-                }))
-            };
-
-            console.log('Success Response:', response);
-            return res.status(200).json({
-                result: response
-            });
+          // 성공 응답 보내기
+          console.log('Success Response:', response2);
+          return res.status(200).json({
+            result: response2
+          });
+        })
+        .catch((error) => {
+          console.error('Error executing MySQL query:', error);
+          return res.status(500).json({
+            isSuccess: false,
+            code: '5007',
+            message: '쿼리 실행 중 오류가 발생했습니다.',
+            result: null
+          });
         });
-    });
-});
+    } catch (err) {
+      console.error('Error executing MySQL queries:', err);
+      return res.status(500).json({
+        isSuccess: false,
+        code: '5000',
+        message: '서버 오류',
+        result: null
+      });
+    }
+  }
+);
+
 
 
 
