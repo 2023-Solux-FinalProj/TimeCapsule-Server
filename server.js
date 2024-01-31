@@ -300,6 +300,7 @@ upload.array('cards[i][image]'),(req, res) => {
             const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
             const send_at = writtendate;
             const arrive_at = arrivalDateString;
+	    const sendstate=1;
 
             console.log(receiver, writer, writtendate, arrive_at, music, theme);
 
@@ -326,8 +327,8 @@ upload.array('cards[i][image]'),(req, res) => {
 
                 const memberID = userResult[0].memberID;
 
-                const insertCapsuleQuery = 'INSERT INTO Capsule (senderID, send_at, arrive_at, music, theme) VALUES (?, ?, ?, ?, ?)';
-                connection.query(insertCapsuleQuery, [memberID, send_at, arrive_at, music, theme], (err, capsuleResult) => {
+                const insertCapsuleQuery = 'INSERT INTO Capsule (senderID, send_at, arrive_at, music, theme, sendState) VALUES (?, ?, ?, ?, ?, ?)';
+                connection.query(insertCapsuleQuery, [memberID, send_at, arrive_at, music, theme, sendstate], (err, capsuleResult) => {
                     if (err) {
                         console.error('Error executing MySQL query (Capsule):', err);
                         return res.status(500).json({
