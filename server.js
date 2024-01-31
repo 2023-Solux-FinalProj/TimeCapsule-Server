@@ -298,7 +298,7 @@ upload.array('cards[i][image]'),(req, res) => {
             const theme = req.body.theme;
             const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
             const send_at = writtendate;
-            const arrive_at = new Date(arrivalDateString);
+            const arrive_at = arrivalDateString;
 
             console.log(receiver, writer, writtendate, arrive_at, music, theme);
 
