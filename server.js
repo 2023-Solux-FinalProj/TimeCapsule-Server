@@ -539,11 +539,11 @@ app.post('/users',
             }],
             music: capsule.music,
             theme: capsule.theme,
-            isChecked:capsule.readState, // boolean
+            isChecked: (capsule.readstate === 1 ? true : false) , // boolean
           }))
         };
 
-        
+
 
         // 성공 응답 보내기
         console.log('Success Response:', response2);
