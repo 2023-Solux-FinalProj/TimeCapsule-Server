@@ -8,12 +8,14 @@ const path=require('path');
 const { v4: uuidv4 } = require('uuid');
 const multer  = require('multer');
 const util = require('util');
+const morgan = require('morgan');
 
 const app = express();
 app.set('view engine', 'ejs');
 
 
 require('dotenv').config();
+app.use(morgan('dev'));
 
 // CORS 설정
 app.use(cors({
@@ -256,13 +258,13 @@ app.post('/login', async(req, res, next) => {
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'uploads/') // 이미지를 저장할 폴더 설정
+        cb(null, './uploads/') // 이미지를 저장할 폴더 설정
     },
     filename: function (req, file, cb) {
         cb(null, uuidv4() + path.extname(file.originalname)) // 파일명 설정
     }
 });
-const upload = multer({ storage: storage });
+const upload = multer({ storage : storage });
 
 
 app.post('/capsule', 
@@ -285,8 +287,8 @@ app.post('/capsule',
     })
 }, 
     
-upload.array('cards[i][image]'),(req, res) => {
-	const receiver = req.body.receiver;
+upload.array('cards[i][image]',5),(req, res) => {
+	        const receiver = req.body.receiver;
             const writer = req.body.writer;
             const writtendate = req.body.writtendate;
             const arrivaldate =req.body.arrivaldate;
@@ -295,12 +297,16 @@ upload.array('cards[i][image]'),(req, res) => {
             const theme = req.body.theme;
             const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
             const send_at = writtendate;
-            const arrive_at = arrivalDateString;
-	    const sendstate=1;
+            const arrive_at =arrivalDateString;
+			const sendstate=1;
 
+
+
+			
             console.log(receiver, writer, writtendate, arrive_at, music, theme);
 
             const getWriterIDQuery = 'SELECT memberID FROM User WHERE username = ?';
+			
             connection.query(getWriterIDQuery, [writer], (err, userResult) => {
                 if (err) {
                     console.error('Error executing MySQL query (User):', err);
@@ -339,6 +345,10 @@ upload.array('cards[i][image]'),(req, res) => {
 
                     const insertContentsQuery = 'INSERT INTO Contents (capsuleID, imageUrl, text) VALUES ?';
                     const cardsData = cards.map((card) => [capsuleID, saveImage(card.image), card.text]);
+
+					
+
+					console.log(cardsData);
 
                     connection.query(insertContentsQuery, [cardsData], (err, contentResult) => {
                         if (err) {
@@ -379,6 +389,7 @@ upload.array('cards[i][image]'),(req, res) => {
 function saveImage(base64Data) {
     const imageBuffer = Buffer.from(base64Data, 'base64'); 
     const imagePath = path.join(__dirname, 'uploads', uuidv4() + '.png'); 
+	console.log('이미지 업로드 경로:',imagePath);
     fs.writeFileSync(imagePath, imageBuffer); 
     return imagePath;
 }
@@ -392,7 +403,7 @@ app.put('/capsule/:id', (req, res) => {
 	const { readState } = req.body;
   
 	// Capsule 테이블의 readState 값을 업데이트하는 SQL 쿼리를 정의합니다.
-	const updateQuery = 'UPDATE Receiver SET readState = ? WHERE capsuleID = ?';
+	const updateQuery = 'UPDATE Reciever SET readState = ? WHERE capsuleID = ?';
   
 	// SQL 쿼리를 실행하여 Capsule 테이블의 readState 값을 업데이트합니다.
 	connection.query(updateQuery, [readState, capsuleId], (error,result) => {
@@ -412,6 +423,10 @@ app.put('/capsule/:id', (req, res) => {
   });
 
 
+
+
+
+// 사용자 정보 및 캡슐 정보 응답 엔드포인트
 
 
 const query = util.promisify(connection.query).bind(connection);
@@ -527,12 +542,6 @@ app.post('/users',
     }
   }
 );
-
-app.get('*', function(req, res) {
-  res.sendFile(path.join(__dirname, 'client/build/index.html'))
-});
-
-
 
 
 
