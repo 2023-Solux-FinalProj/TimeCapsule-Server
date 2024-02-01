@@ -264,31 +264,35 @@ const storage = multer.diskStorage({
         cb(null, uuidv4() + path.extname(file.originalname)) // 파일명 설정
     }
 });
-const upload = multer({ storage : storage });
+
+const upload = multer(
+  { storage : storage }, 
+  {limits: {fieldSize : 25 * 1024 * 1024}
+});
 
 
 app.post('/capsule', 
-(req, res, next) => {
-    let token = null;
-    if (req.headers.authorization) {
-        token = req.headers.authorization.split('Bearer ')[1];
-    }
-    const secretKey = require('./config/secretkey');
+  (req, res, next) => {
+      let token = null;
+      if (req.headers.authorization) {
+          token = req.headers.authorization.split('Bearer ')[1];
+      }
+      const secretKey = require('./config/secretkey');
 
-    jwt.verify(token, secretKey, (err, decoded) => {
-        if (err) {
-            res.send(err.message);
-            return ;
-        }
-        else {
-            console.log("사용자 jwt 토큰 검증 완료");
-            next();
-        }
-    })
-}, 
+      jwt.verify(token, secretKey, (err, decoded) => {
+          if (err) {
+              res.send(err.message);
+              return ;
+          }
+          else {
+              console.log("사용자 jwt 토큰 검증 완료");
+              next();
+          }
+      })
+  }, 
     
-upload.array('cards[i][image]',5),(req, res) => {
-	        const receiver = req.body.receiver;
+upload.array('cards[i][image]'),(req, res) => {
+            const receiver = req.body.receiver;
             const writer = req.body.writer;
             const writtendate = req.body.writtendate;
             const arrivaldate =req.body.arrivaldate;
@@ -298,11 +302,8 @@ upload.array('cards[i][image]',5),(req, res) => {
             const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
             const send_at = writtendate;
             const arrive_at =arrivalDateString;
-			const sendstate=1;
+            const sendstate=1;
 
-
-
-			
             console.log(receiver, writer, writtendate, arrive_at, music, theme);
 
             const getWriterIDQuery = 'SELECT memberID FROM User WHERE username = ?';
@@ -389,13 +390,10 @@ upload.array('cards[i][image]',5),(req, res) => {
 function saveImage(base64Data) {
     const imageBuffer = Buffer.from(base64Data, 'base64'); 
     const imagePath = path.join(__dirname, 'uploads', uuidv4() + '.png'); 
-	console.log('이미지 업로드 경로:',imagePath);
+    console.log('이미지 업로드 경로:',imagePath);
     fs.writeFileSync(imagePath, imageBuffer); 
     return imagePath;
 }
-
-	
-    
 
 
 app.put('/capsule/:id', (req, res) => {
@@ -407,18 +405,18 @@ app.put('/capsule/:id', (req, res) => {
   
 	// SQL 쿼리를 실행하여 Capsule 테이블의 readState 값을 업데이트합니다.
 	connection.query(updateQuery, [readState, capsuleId], (error,result) => {
-	  if (error) {
-		console.error('Error updating readState:', error);
-		return res.status(500).json({
-		  success: false,
-		  message: 'readState 변경실패 '
-		});
-	  }
-	  console.log('Read state updated successfully');
-	  return res.status(200).json({
-		success: true,
-		message: 'readstate 변경완료!'
-	  });
+    if (error) {
+    console.error('Error updating readState:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'readState 변경실패 '
+    });
+    }
+    console.log('Read state updated successfully');
+    return res.status(200).json({
+    success: true,
+    message: 'readstate 변경완료!'
+    });
 	});
   });
 
