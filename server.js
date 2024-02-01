@@ -256,6 +256,10 @@ app.post('/login', async(req, res, next) => {
 // 	})
 // }
 
+
+// multer 권한추가 코드
+app.use(express.static('/uploads'));
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, './uploads/') // 이미지를 저장할 폴더 설정
