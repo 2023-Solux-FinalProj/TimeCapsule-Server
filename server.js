@@ -289,11 +289,7 @@ upload.array('cards[i][image]'),(req, res) => {
 	const receiver = req.body.receiver;
             const writer = req.body.writer;
             const writtendate = req.body.writtendate;
-            const arrivaldate = {
-                year: req.body['year'],
-                month: req.body['month'],
-                day: req.body['day']
-            };
+            const arrivaldate =req.body.arrivaldate;
             const cards = req.body.cards;   
             const music = req.body.music;
             const theme = req.body.theme;
