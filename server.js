@@ -271,7 +271,7 @@ const upload = multer(
 );
 
 //깃 테스트 
-app.post('/capsule', 
+app.post('/capsule', upload.array('cards'),
   (req, res, next) => {
       let token = null;
       if (req.headers.authorization) {
@@ -291,12 +291,13 @@ app.post('/capsule',
       })
   }, 
     
-upload.array('cards[i][image]'),(req, res) => {
+(req, res) => {
             const receiver = req.body.receiver;
             const writer = req.body.writer;
             const writtendate = req.body.writtendate;
             const arrivaldate =req.body.arrivaldate;
-            const cards = req.body.cards;   
+            // const cards = req.body.cards;
+			const cards=req.files   
             const music = req.body.music;
             const theme = req.body.theme;
             const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
