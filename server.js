@@ -258,7 +258,7 @@ app.post('/login', async(req, res, next) => {
 
 
 // multer 권한추가 코드
-app.use("/uploads", express.static(path.join("uploads")));
+app.use("/uploads", express.static("/home/ubuntu/TimeCapsule-Server/uploads"));
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -511,14 +511,18 @@ app.post('/users',
             Capsule.theme,
             User.username,
             Contents.imageUrl, 
-            Contents.text
+            Contents.text,
+            Receiver.readstate
           FROM Capsule
+          INNER JOIN Receiver ON Capsule.capsuleID = Receiver.capsuleID
           INNER JOIN User ON Capsule.senderID = User.memberID
           INNER JOIN Contents ON Capsule.capsuleID = Contents.capsuleID
           WHERE Capsule.capsuleID IN (?)
           `;
 
         const capsuleResult = await query(getCapsulesQuery, [capsuleIDs]); // 비동기 쿼리 실행
+
+        
 
         const response2 = {
           token: req.headers.authorization, // JWT Token은 어디서 받아오는지에 따라 적절한 처리가 필요합니다.
@@ -535,9 +539,11 @@ app.post('/users',
             }],
             music: capsule.music,
             theme: capsule.theme,
-            isChecked: false, // boolean
+            isChecked:capsule.readState, // boolean
           }))
         };
+
+        
 
         // 성공 응답 보내기
         console.log('Success Response:', response2);
