@@ -258,7 +258,7 @@ app.post('/login', async(req, res, next) => {
 
 
 // multer 권한추가 코드
-app.use(express.static('/uploads'));
+app.use('/uploads', express.static('uploads'));
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
