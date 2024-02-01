@@ -71,6 +71,10 @@ app.get('/', function(req, res){
 	res.send('타임캡슐, 과거에서 온 편지입니다.');
 })
 
+app.get("*", function(req, res) {
+  res.sendFile(path.join(__dirname), 'client/build/index.html');
+})
+
 
 
 // /send 응답 
