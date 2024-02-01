@@ -258,7 +258,7 @@ app.post('/login', async(req, res, next) => {
 
 
 // multer 권한추가 코드
-app.use("/uploads", express.static("/home/ubuntu/TimeCapsule-Server/uploads"));
+app.use(express.static(path.join(__dirname, 'uploads')));
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
