@@ -271,7 +271,7 @@ const upload = multer(
 );
 
 //깃 테스트 
-app.post('/capsule', upload.array('cards'),
+app.post('/capsule',
   (req, res, next) => {
       let token = null;
       if (req.headers.authorization) {
@@ -296,16 +296,18 @@ app.post('/capsule', upload.array('cards'),
             const writer = req.body.writer;
             const writtendate = req.body.writtendate;
             const arrivaldate =req.body.arrivaldate;
-            // const cards = req.body.cards;
-			const cards=req.files   
+            const cards = req.body.cards;
             const music = req.body.music;
             const theme = req.body.theme;
             const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
             const send_at = writtendate;
             const arrive_at =arrivalDateString;
             const sendstate=1;
+            
 
-            console.log(receiver, writer, writtendate, arrive_at, music, theme);
+			// base64 디코딩해서 이미지 경로로 변환
+			const imagePaths=cards.map((card)=>saveImage(card.image))
+			console.log(receiver, writer, writtendate, arrive_at, music, theme,imagePaths);
 
             const getWriterIDQuery = 'SELECT memberID FROM User WHERE username = ?';
 			
@@ -347,7 +349,7 @@ app.post('/capsule', upload.array('cards'),
 
                     const insertContentsQuery = 'INSERT INTO Contents (capsuleID, imageUrl, text) VALUES ?';
                     const cardsData = cards.map((card) => [capsuleID, saveImage(card.image), card.text]);
-
+					// const cardData=req.files.map((file, index)=>[capsuleID, file.path, req.body.cards[index].text])
 					
 
 					console.log(cardsData);
@@ -390,11 +392,20 @@ app.post('/capsule', upload.array('cards'),
 
 function saveImage(base64Data) {
     const imageBuffer = Buffer.from(base64Data, 'base64'); 
-    const imagePath = path.join(__dirname, 'uploads', uuidv4() + '.png'); 
+    const imagePath = path.join(__dirname, 'uploads', uuidv4() + '.jpeg'); 
     console.log('이미지 업로드 경로:',imagePath);
     fs.writeFileSync(imagePath, imageBuffer); 
     return imagePath;
 }
+// const saveImage=(cards)=>{
+// 	return cards.map((card)=>{
+// 		const ext=path.extname(card.image)
+// 		const imageBuffer=Buffer.from(card.image,'base64')
+// 		const imagePath=path.join(__dirname, 'uploads',uuidv4()+'.jpeg')
+// 		fs.writeFileSync(imagePath,imageBuffer)
+// 		return imagePath
+// 	})
+// }
 
 
 app.put('/capsule/:id', (req, res) => {
