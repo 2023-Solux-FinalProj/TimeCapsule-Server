@@ -9,6 +9,17 @@ const { v4: uuidv4 } = require('uuid');
 const multer  = require('multer');
 const util = require('util');
 const morgan = require('morgan');
+const AWS = require('aws-sdk');
+const multerS3 = require('multer-s3');
+
+
+
+
+
+
+
+
+
 
 const app = express();
 app.set('view engine', 'ejs');
@@ -260,19 +271,42 @@ app.post('/login', async(req, res, next) => {
 // multer 권한추가 코드
 app.use(express.static(path.join(__dirname, 'uploads')));
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, './uploads/') // 이미지를 저장할 폴더 설정
-    },
-    filename: function (req, file, cb) {
-        cb(null, uuidv4() + path.extname(file.originalname)) // 파일명 설정
-    }
+//const storage = multer.diskStorage({
+  //  destination: function (req, file, cb) {
+     //   cb(null, './uploads/') // 이미지를 저장할 폴더 설정
+   // },
+    //filename: function (req, file, cb) {
+      //  cb(null, uuidv4() + path.extname(file.originalname)) // 파일명 설정
+    //}
+//});
+
+
+//이미지 저장을 위한 AWS S3업로드 설정 
+AWS.config.update({
+  region: 'ap-northeast-2',
+  accessKeyId: process.env.S3_ACCESS_KEY,//accessKeyId의 경우는 공개되지 않도록 환경변수로 설정
+  secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,//secretAccessKey도 공개되지 않도록 환경변수 설정
+});
+
+const s3=new AWS.S3();
+
+const storage = multerS3({
+  s3,
+  acl: 'public-read',
+  bucket: '${together2422}',
+  contentType: multerS3.AUTO_CONTENT_TYPE,
+  key: (req, file, cb) => {
+    // 파일 이름 생성 및 반환
+    cb(null, `${Date.now().toString()}_${uuid()}_${file.originalname}`);
+  },
 });
 
 const upload = multer(
   { storage : storage, 
     limits: {fieldSize : 25 * 1024 * 1024} }, 
 );
+
+
 
 //깃 테스트 
 app.post('/capsule',
