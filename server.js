@@ -63,6 +63,19 @@ const connection = mysql.createConnection({
 
 app.use(express.json()); 
 
+// 쿼리 스트링 라이브러리
+const qs = require("qs");
+const axios = require("axios");
+// Date 관련 라이브러리
+const moment = require("moment");
+const jwt = require("jsonwebtoken");
+const bodyParser = require('body-parser');
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended:true}));
+
+
+
 // 데이터베이스 연결
 connection.connect(err => {
     if (err) {
@@ -97,16 +110,7 @@ app.get('/', function(req, res){
 
 
 
-// 쿼리 스트링 라이브러리
-const qs = require("qs");
-const axios = require("axios");
-// Date 관련 라이브러리
-const moment = require("moment");
-const jwt = require("jsonwebtoken");
-const bodyParser = require('body-parser');
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended:true}));
 
 // 충돌이 있는지 미리 확인함
 process.on('uncaughtException', function (err) {
@@ -330,7 +334,9 @@ app.post('/capsule',
       })
   }, 
     
-upload.array('cards'),(req, res) => {
+upload.array('cards'),
+
+(req, res) => {
             const receiver = req.body.receiver;
             const writer = req.body.writer;
             const writtendate = req.body.writtendate;
@@ -339,16 +345,16 @@ upload.array('cards'),(req, res) => {
             const music = req.body.music;
             const theme = req.body.theme;
             const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
+            //const arrivalDateString = '2024-02-04';
             const send_at = writtendate;
             const arrive_at =arrivalDateString;
             const sendstate=1;
             
-
 			// base64 디코딩해서 이미지 경로로 변환
 			const imagePaths=cards.map((card)=>saveImage(card.image))
 			console.log(receiver, writer, writtendate, arrive_at, music, theme,imagePaths);
 
-            const getWriterIDQuery = 'SELECT memberID FROM User WHERE username = ?';
+            const getWriterIDQuery = 'SELECT memberID FROM User WHERE email = ?';
 			
             connection.query(getWriterIDQuery, [writer], (err, userResult) => {
                 if (err) {
