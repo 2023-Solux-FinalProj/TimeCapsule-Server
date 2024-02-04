@@ -570,11 +570,11 @@ app.post('/users',
           email: email.toString(),
           name: username,
           capsules: capsuleResult.map(capsule => ({
+            id: capsule.capsuleID,
             writer: capsule.username,
             writtendate: capsule.send_at,
             arrivaldate: capsule.arrive_at,
             cards: [{
-              id: capsule.capsuleID,
               image: capsule.imageUrl,
               text: capsule.text
             }],
