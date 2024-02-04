@@ -371,7 +371,7 @@ upload.array('cards'),
                     return res.status(400).json({
                         isSuccess: false,
                         code: '4001',
-                        message: '유효하지않은 username입니다.',
+                        message: '유효하지않은 email입니다.',
                         result: null
                     });
                 }
@@ -570,11 +570,11 @@ app.post('/users',
           email: email.toString(),
           name: username,
           capsules: capsuleResult.map(capsule => ({
-            id: capsule.capsuleID,
             writer: capsule.username,
             writtendate: capsule.send_at,
             arrivaldate: capsule.arrive_at,
             cards: [{
+              id: capsule.capsuleID,
               image: capsule.imageUrl,
               text: capsule.text
             }],
