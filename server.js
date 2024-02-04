@@ -9,6 +9,8 @@ const { v4: uuidv4 } = require('uuid');
 const multer  = require('multer');
 const util = require('util');
 const morgan = require('morgan');
+const AWS = require('aws-sdk');
+const multerS3 = require('multer-s3');
 
 
 
@@ -266,13 +268,6 @@ app.post('/login', async(req, res, next) => {
 // }
 
 
-
-
-// 이미지 처리
-
-const AWS = require('aws-sdk');
-const multerS3 = require('multer-s3');
-
 // multer 권한추가 코드
 app.use(express.static(path.join(__dirname, 'uploads')));
 
@@ -289,23 +284,23 @@ app.use(express.static(path.join(__dirname, 'uploads')));
 //이미지 저장을 위한 AWS S3업로드 설정 
 AWS.config.update({
   region: 'ap-northeast-2',
-  accessKeyId: process.env.S3_ACCESS_KEY, //accessKeyId의 경우는 공개되지 않도록 환경변수로 설정
-  secretAccessKey: process.env.S3_SECRET_ACCESS_KEY, //secretAccessKey도 공개되지 않도록 환경변수 설정
+  accessKeyId: process.env.S3_ACCESS_KEY,//accessKeyId의 경우는 공개되지 않도록 환경변수로 설정
+  secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,//secretAccessKey도 공개되지 않도록 환경변수 설정
 });
 
-const s3 = new AWS.S3();
+const s3=new AWS.S3();
 
-// 채민 작성 코드
 const storage = multerS3({
-  s3: s3,
+  s3,
   acl: 'public-read',
-  bucket: 'together2422',
+  bucket: '${capsule24-bucket}',
   contentType: multerS3.AUTO_CONTENT_TYPE,
   key: (req, file, cb) => {
     // 파일 이름 생성 및 반환
     cb(null, `${Date.now().toString()}_${uuid()}_${file.originalname}`);
   },
 });
+
 
 const upload = multer(
   { storage : storage, 
@@ -314,70 +309,44 @@ const upload = multer(
 
 
 
-// // 민진 작성 코드
-// const upload = multer({
-//   storage : multerS3 ({
-//     s3 : s3,
-//     bucket : 'together2422',
-//     key : (req, file, callback) => {
-//       // 파일 경로 및 이름 생성
-//       callback(null, path)
-//     }
-//   })
-// })
-
-
-// base64 기반으로 이미지 저장하기
-function saveImage(base64Data) {
-  const imageBuffer = Buffer.from(base64Data, 'base64'); 
-  const imagePath = path.join(__dirname, 'uploads', uuidv4() + '.jpeg'); 
-  console.log('이미지 업로드 경로:',imagePath);
-  fs.writeFileSync(imagePath, imageBuffer); 
-  return imagePath;
-}
-
-
-
-
+//깃 테스트 
 app.post('/capsule',
-// 토큰검증 미들웨어
-  // (req, res, next) => {
-  //     let token = null;
-  //     if (req.headers.authorization) {
-  //         token = req.headers.authorization.split('Bearer ')[1];
-  //     }
-  //     const secretKey = require('./config/secretkey');
+  (req, res, next) => {
+      let token = null;
+      if (req.headers.authorization) {
+          token = req.headers.authorization.split('Bearer ')[1];
+      }
+      const secretKey = require('./config/secretkey');
 
-  //     jwt.verify(token, secretKey, (err, decoded) => {
-  //         if (err) {
-  //             res.send(err.message);
-  //             return ;
-  //         }
-  //         else {
-  //             console.log("사용자 jwt 토큰 검증 완료");
-  //             next();
-  //         }
-  //     })
-  // }, 
+      jwt.verify(token, secretKey, (err, decoded) => {
+          if (err) {
+              res.send(err.message);
+              return ;
+          }
+          else {
+              console.log("사용자 jwt 토큰 검증 완료");
+              next();
+          }
+      })
+  }, 
     
 upload.array('cards'),(req, res) => {
             const receiver = req.body.receiver;
             const writer = req.body.writer;
             const writtendate = req.body.writtendate;
-            const arrivaldate = req.body.arrivaldate;
+            const arrivaldate =req.body.arrivaldate;
             const cards = req.body.cards;
             const music = req.body.music;
             const theme = req.body.theme;
             const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
-            //const arrivalDateString = `2024-02-03`;
             const send_at = writtendate;
-            const arrive_at = arrivalDateString;
+            const arrive_at =arrivalDateString;
             const sendstate=1;
             
 
-          // // base64 디코딩해서 이미지 경로로 변환
-          // const imagePaths=cards.map((card)=>saveImage(card.image))
-          // console.log(receiver, writer, writtendate, arrive_at, music, theme,imagePaths);
+			// base64 디코딩해서 이미지 경로로 변환
+			const imagePaths=cards.map((card)=>saveImage(card.image))
+			console.log(receiver, writer, writtendate, arrive_at, music, theme,imagePaths);
 
             const getWriterIDQuery = 'SELECT memberID FROM User WHERE username = ?';
 			
@@ -415,14 +384,14 @@ upload.array('cards'),(req, res) => {
                         });
                     }
 
-                const capsuleID = capsuleResult.insertId;
+                    const capsuleID = capsuleResult.insertId;
 
-                // content db 접근 (내용 및 이미지)
-                const insertContentsQuery = 'INSERT INTO Contents (capsuleID, imageUrl, text) VALUES ?';
-                const cardsData = cards.map((card) => [capsuleID, saveImage(card.image), card.text]);
-					      // const cardData=req.files.map((file, index)=>[capsuleID, file.path, req.body.cards[index].text])
+                    const insertContentsQuery = 'INSERT INTO Contents (capsuleID, imageUrl, text) VALUES ?';
+                    const cardsData = cards.map((card) => [capsuleID, saveImage(card.image), card.text]);
+					// const cardData=req.files.map((file, index)=>[capsuleID, file.path, req.body.cards[index].text])
 					
-                console.log(cardsData);
+
+					console.log(cardsData);
 
                     connection.query(insertContentsQuery, [cardsData], (err, contentResult) => {
                         if (err) {
@@ -460,7 +429,13 @@ upload.array('cards'),(req, res) => {
             });
         });
 
-
+function saveImage(base64Data) {
+    const imageBuffer = Buffer.from(base64Data, 'base64'); 
+    const imagePath = path.join(__dirname, 'uploads', uuidv4() + '.jpeg'); 
+    console.log('이미지 업로드 경로:',imagePath);
+    fs.writeFileSync(imagePath, imageBuffer); 
+    return imagePath;
+}
 // const saveImage=(cards)=>{
 // 	return cards.map((card)=>{
 // 		const ext=path.extname(card.image)
