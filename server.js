@@ -496,7 +496,7 @@ app.post('/users',
     if (req.headers.authorization) {
       token = req.headers.authorization.split('Bearer ')[1];
     }
-    console.log(`${token}`);
+    //console.log(`${token}`);
     const secretKey = require('./config/secretkey');
 
     jwt.verify(token, secretKey, (err, decoded) => {
