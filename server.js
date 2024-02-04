@@ -334,7 +334,7 @@ app.post('/capsule',
       })
   }, 
     
-upload.array('cards'),
+//upload.array('cards'),
 
 (req, res) => {
             const receiver = req.body.receiver;
