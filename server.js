@@ -322,6 +322,7 @@ app.post('/capsule',
       const writtendate = req.body.writtendate;
       const arrivaldate = req.body.arrivaldate;
       const cards = req.body.cardTexts; // 이미지 데이터는 req.files에 있음
+      const cardImageFiles= req.files['cardImages'];
       const music = req.body.music;
       const theme = req.body.theme;
       const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
@@ -329,7 +330,7 @@ app.post('/capsule',
       const arrive_at = arrivalDateString;
       const sendstate = 1;
 
-	  console.log(receiver, writer, writtendate, arrive_at, music, theme,cards);
+      console.log(receiver, writer, writtendate, arrive_at, music, theme,cards, cardImageFiles);
 
       try {
           const getWriterIDQuery = 'SELECT memberID FROM User WHERE email= ?';
