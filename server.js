@@ -395,11 +395,13 @@ upload.array('cards'),
                     const insertContentsQuery = 'INSERT INTO Contents (capsuleID, imageUrl, text) VALUES ?';
                     const cardsData = cards.map((card) => [capsuleID, card.location, card.text]);
 					// const cardData=req.files.map((file, index)=>[capsuleID, file.path, req.body.cards[index].text])
-					
+					          const values=cardsData.map(card => '(' + card.map(connection.escape).join(',') + ')').join(',');
 
 					          console.log(cardsData);
 
-                    connection.query(insertContentsQuery, [cardsData], (err, contentResult) => {
+                    const insertContentsQueryWithValues = insertContentsQuery.replace('?', values)
+
+                    connection.query(insertContentsQueryWithValues,(err, contentResult) => {
                         if (err) {
                             console.error('Error executing MySQL query (Contents):', err);
                             return res.status(500).json({
@@ -477,7 +479,7 @@ app.put('/capsule/:id', (req, res) => {
 	// Capsule 테이블의 readState 값을 업데이트하는 SQL 쿼리를 정의합니다.
 	const updateQuery = 'UPDATE Receiver SET readState = ? WHERE capsuleID = ?';
   
-	// SQL 쿼리를 실행하여 Capsule 테이블의 readState 값을 업데이트합니다.
+	// SQL 쿼리를 실행하여 Capsule 테이블의 realsdState 값을 업데이트합니다.
 	connection.query(updateQuery, [readState, capsuleId], (error,result) => {
     if (error) {
     console.error('Error updating readState:', error);
