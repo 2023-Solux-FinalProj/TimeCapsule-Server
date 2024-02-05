@@ -315,7 +315,7 @@ app.post('/capsule',
           }
       });
   }, 
-  upload.array('cardsImages'),
+  upload.array('cardImages'),
   async (req, res) => {
       const receiver = req.body.receiver;
       const writer = req.body.writer;
