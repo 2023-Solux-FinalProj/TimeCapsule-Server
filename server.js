@@ -316,21 +316,21 @@ app.post('/capsule',
       });
   }, 
   upload.array('cardImages'),
-  async (req, res) => {
-      const receiver = req.body.receiver;
-      const writer = req.body.writer;
-      const writtendate = req.body.writtendate;
-      const arrivaldate = req.body.arrivaldate;
-      const cards = req.body.cardTexts; // 이미지 데이터는 req.files에 있음
-      const cardImageFiles= req.files['cardImages'];
-      const music = req.body.music;
-      const theme = req.body.theme;
-      const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
-      const send_at = writtendate;
-      const arrive_at = arrivalDateString;
-      const sendstate = 1;
+  (req, res) => {
+     // const receiver = req.body.receiver;
+      //const writer = req.body.writer;
+     // const writtendate = req.body.writtendate;
+      //const arrivaldate = req.body.arrivaldate;
+      //const cards = req.body.cardTexts; // 이미지 데이터는 req.files에 있음
+      const cardImageFiles= req.files;
+      //const music = req.body.music;
+      //const theme = req.body.theme;
+      //const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
+      //const send_at = writtendate;
+      //const arrive_at = arrivalDateString;
+      //const sendstate = 1;
 
-      console.log(receiver, writer, writtendate, arrive_at, music, theme,cards, cardImageFiles);
+      console.log(cardImageFiles);
 
       try {
           const getWriterIDQuery = 'SELECT memberID FROM User WHERE email= ?';
