@@ -315,25 +315,24 @@ const upload = multer(
 
 //깃 테스트 
 app.post('/capsule',
-	 
- (req, res, next) => {
+  (req, res, next) => {
       let token = null;
       if (req.headers.authorization) {
           token = req.headers.authorization.split('Bearer ')[1];
-      }
-      const secretKey = require('./config/secretkey');
+       }
+       const secretKey = require('./config/secretkey');
 
-      jwt.verify(token, secretKey, (err, decoded) => {
-          if (err) {
+       jwt.verify(token, secretKey, (err, decoded) => {
+           if (err) {
                res.send(err.message);
               return ;
-           }
+          }
            else {
                console.log("사용자 jwt 토큰 검증 완료");
                next();
-         }
-    })
- }, 
+           }
+       })
+   }, 
     
 upload.array('cards'),
 
@@ -342,7 +341,7 @@ upload.array('cards'),
             const writer = req.body.writer;
             const writtendate = req.body.writtendate;
             const arrivaldate =req.body.arrivaldate;
-            const cards = req.body.cards;
+            const cards = req.files;
             const music = req.body.music;
             const theme = req.body.theme;
             const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
@@ -355,7 +354,7 @@ upload.array('cards'),
 			//const imagePaths=cards.map((card)=>saveImage(card.image))
 			//console.log(receiver, writer, writtendate, arrive_at, music, theme,imagePaths);
 
-            const getWriterIDQuery = 'SELECT memberID FROM User WHERE email = ?';
+            const getWriterIDQuery = 'SELECT memberID FROM User WHERE username = ?';
 			
             connection.query(getWriterIDQuery, [writer], (err, userResult) => {
                 if (err) {
@@ -394,11 +393,11 @@ upload.array('cards'),
                     const capsuleID = capsuleResult.insertId;
 
                     const insertContentsQuery = 'INSERT INTO Contents (capsuleID, imageUrl, text) VALUES ?';
-                    const cardsData = cards.map((card) => [capsuleID, saveImage(card.image), card.text]);
+                    const cardsData = cards.map((card) => [capsuleID, card.location, card.text]);
 					// const cardData=req.files.map((file, index)=>[capsuleID, file.path, req.body.cards[index].text])
 					
 
-					console.log(cardsData);
+					          console.log(cardsData);
 
                     connection.query(insertContentsQuery, [cardsData], (err, contentResult) => {
                         if (err) {
@@ -436,26 +435,27 @@ upload.array('cards'),
             });
         });
 
-function saveImage(base64Data) {
-
-    const imageBuffer = Buffer.from(base64Data, 'base64'); 
-    const params ={
-      Bucket:'capsule24-bucket',
-      Key:uuidv4() + '.jpeg',
-      Body:imageBuffer,
-      ContentType:'image/jpeg'
-    };
-    s3.upload(params,function(err,data){
-      if(err){
-        console.error('S3에 이미지 업로드 실패 :',err);
-        return null;
-      }
-      else{
-        console.error('S3에 이미지 업로드 성공:',data.Location);
-        return data.Location;
-      }
-    })
-};
+//function saveImage(base64Data) {
+  //return new Promise((resolve, reject)=> {
+    //const imageBuffer = Buffer.from(base64Data, 'base64'); 
+    //const params ={
+   //   Bucket:'capsule24-bucket',
+   //   Key:uuidv4() + '.jpeg',
+   //   Body:imageBuffer,
+    //  ContentType:'image/jpeg'
+   // };
+    //s3.upload(params,function(err,data){
+      //if(err){
+        //console.error('S3에 이미지 업로드 실패 :',err);
+        //reject(err);
+      //}
+      //else{
+        //console.error('S3에 이미지 업로드 성공:',data.Location);
+        //resolve(data.Location);
+      //}
+    //})
+  //})
+//};
 
 
 
@@ -624,6 +624,8 @@ app.post('/users',
 app.get('*', function(req, res) {
   res.sendFile(path.join(__dirname, 'client/build/index.html'))
 });
+
+//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
 
 
 
