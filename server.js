@@ -271,8 +271,6 @@ app.post('/login', async(req, res, next) => {
 // 	})
 // }
 
-
-
 app.use(express.static(path.join(__dirname, 'uploads')));
 
 //이미지 저장을 위한 AWS S3업로드 설정 
@@ -281,20 +279,22 @@ AWS.config.update({
   accessKeyId: process.env.S3_ACCESS_KEY,//accessKeyId의 경우는 공개되지 않도록 환경변수로 설정
   secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,//secretAccessKey도 공개되지 않도록 환경변수 설정
 });
+
 const s3=new AWS.S3();
-const upload= multer({
-  storage:multerS3({
-    s3,
-    acl: 'public-read',
-    bucket: 'capsule24-bucket',
-    contentType: multerS3.AUTO_CONTENT_TYPE,
-    key: (req, file, cb) => {
-      // 파일 이름 생성 및 반환
-      cb(null, `${Date.now().toString()}_${uuid()}_${file.originalname}`);
-    },
-  }),
-  limits:{fieldSize : 25 * 1024 * 1024}
-}).array('cards');
+const storage = multerS3({
+  s3,
+  acl: 'public-read',
+  bucket: 'capsule24-bucket',
+  contentType: multerS3.AUTO_CONTENT_TYPE,
+  key: (req, file, cb) => {
+    // 파일 이름 생성 및 반환
+    cb(null, `${Date.now().toString()}_${uuid()}_${file.originalname}`);
+  },
+});
+const upload = multer(
+  { storage : storage, 
+    limits: {fieldSize : 25 * 1024 * 1024} }, 
+);
 
 //깃 테스트 
 app.post('/capsule',
@@ -319,7 +319,7 @@ app.post('/capsule',
    }, 
 
 
-  
+upload.array('cards'), 
 (req, res) => {
             const receiver = req.body.receiver;
             const writer = req.body.writer;
@@ -408,6 +408,13 @@ app.post('/capsule',
                 });
             });
         });
+
+
+
+
+
+
+
 
 
 
