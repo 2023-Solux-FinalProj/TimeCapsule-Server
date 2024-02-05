@@ -341,7 +341,7 @@ upload.array('cards'),
             const writer = req.body.writer;
             const writtendate = req.body.writtendate;
             const arrivaldate =req.body.arrivaldate;
-            const cards =  req.files['cards'];
+            const cards =  req.files;
             const music = req.body.music;
             const theme = req.body.theme;
             const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
