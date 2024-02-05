@@ -351,8 +351,8 @@ upload.array('cards'),
             const sendstate=1;
             
 			// base64 디코딩해서 이미지 경로로 변환
-			const imagePaths=cards.map((card)=>saveImage(card.image))
-			console.log(receiver, writer, writtendate, arrive_at, music, theme,imagePaths);
+			//const imagePaths=cards.map((card)=>saveImage(card.image))
+			//console.log(receiver, writer, writtendate, arrive_at, music, theme,imagePaths);
 
             const getWriterIDQuery = 'SELECT memberID FROM User WHERE email = ?';
 			
