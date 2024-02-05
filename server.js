@@ -295,7 +295,7 @@ app.post('/capsule',
       })
   }, 
     
-upload.array('cards[i][file]'),(req, res) => {
+upload.array('cards'),(req, res) => {
             const receiver = req.body.receiver;
             const writer = req.body.writer;
             const writtendate = req.body.writtendate;
