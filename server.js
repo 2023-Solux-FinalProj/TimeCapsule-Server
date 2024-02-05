@@ -8,7 +8,6 @@ const path=require('path');
 const { v4: uuidv4 } = require('uuid');
 const multer  = require('multer');
 const util = require('util');
-const morgan = require('morgan');
 const AWS = require('aws-sdk');
 const multerS3 = require('multer-s3');
 
@@ -24,9 +23,6 @@ const multerS3 = require('multer-s3');
 const app = express();
 app.set('view engine', 'ejs');
 
-
-require('dotenv').config();
-app.use(morgan('dev'));
 
 // CORS 설정
 app.use(cors({
