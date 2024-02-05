@@ -9,6 +9,17 @@ const { v4: uuidv4 } = require('uuid');
 const multer  = require('multer');
 const util = require('util');
 const morgan = require('morgan');
+const AWS = require('aws-sdk');
+const multerS3 = require('multer-s3');
+
+
+
+
+
+
+
+
+
 
 const app = express();
 app.set('view engine', 'ejs');
@@ -52,6 +63,19 @@ const connection = mysql.createConnection({
 
 app.use(express.json()); 
 
+// 쿼리 스트링 라이브러리
+const qs = require("qs");
+const axios = require("axios");
+// Date 관련 라이브러리
+const moment = require("moment");
+const jwt = require("jsonwebtoken");
+const bodyParser = require('body-parser');
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended:true}));
+
+
+
 // 데이터베이스 연결
 connection.connect(err => {
     if (err) {
@@ -86,16 +110,7 @@ app.get('/', function(req, res){
 
 
 
-// 쿼리 스트링 라이브러리
-const qs = require("qs");
-const axios = require("axios");
-// Date 관련 라이브러리
-const moment = require("moment");
-const jwt = require("jsonwebtoken");
-const bodyParser = require('body-parser');
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended:true}));
 
 // 충돌이 있는지 미리 확인함
 process.on('uncaughtException', function (err) {
@@ -256,16 +271,14 @@ app.post('/login', async(req, res, next) => {
 // 	})
 // }
 
-app.use(express.static(path.join(__dirname, 'uploads')));
 
-//이미지 저장을 위한 AWS S3업로드 설정 
 AWS.config.update({
   region: 'ap-northeast-2',
-  accessKeyId: process.env.S3_ACCESS_KEY,//accessKeyId의 경우는 공개되지 않도록 환경변수로 설정
-  secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,//secretAccessKey도 공개되지 않도록 환경변수 설정
+  accessKeyId: process.env.S3_ACCESS_KEY,
+  secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
 });
 
-const s3=new AWS.S3();
+const s3 = new AWS.S3();
 
 const storage = multerS3({
   s3,
@@ -273,18 +286,18 @@ const storage = multerS3({
   bucket: 'capsule24-bucket',
   contentType: multerS3.AUTO_CONTENT_TYPE,
   key: (req, file, cb) => {
-    // 파일 이름 생성 및 반환
-    cb(null, `${Date.now().toString()}_${uuid()}_${file.originalname}`);
+      // 파일 이름 생성 및 반환
+      cb(null, `${Date.now().toString()}_${uuidv4()}_${file.originalname}`);
   },
 });
-const upload = multer(
-  { storage : storage, 
-    limits: {fieldSize : 25 * 1024 * 1024} }, 
-);
+
+const upload = multer({
+  storage: storage,
+  limits: { fieldSize: 25 * 1024 * 1024 },
+});
 
 //깃 테스트 
 app.post('/capsule',
-
   (req, res, next) => {
       let token = null;
       if (req.headers.authorization) {
@@ -294,129 +307,96 @@ app.post('/capsule',
 
       jwt.verify(token, secretKey, (err, decoded) => {
           if (err) {
-               res.send(err.message);
-               return ;
-           }
-           else {
-               console.log("사용자 jwt 토큰 검증 완료");
-               next();
-         }
-      })
-   }, 
+              res.send(err.message);
+              return;
+          } else {
+              console.log("사용자 jwt 토큰 검증 완료");
+              next();
+          }
+      });
+  }, 
+  upload.array('cardsImages'),
+  async (req, res) => {
+      const receiver = req.body.receiver;
+      const writer = req.body.writer;
+      const writtendate = req.body.writtendate;
+      const arrivaldate = req.body.arrivaldate;
+      const cards = req.body.cardTexts; // 이미지 데이터는 req.files에 있음
+      const music = req.body.music;
+      const theme = req.body.theme;
+      const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
+      const send_at = writtendate;
+      const arrive_at = arrivalDateString;
+      const sendstate = 1;
 
+	  console.log(receiver, writer, writtendate, arrive_at, music, theme,cards);
 
-upload.array('cards'), 
-(req, res) => {
-            const receiver = req.body.receiver;
-            const writer = req.body.writer;
-            const writtendate = req.body.writtendate;
-            const arrivaldate =req.body.arrivaldate;
-            const cards = req.body.cards;
-            const music = req.body.music;
-            const theme = req.body.theme;
-            const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
-            //const arrivalDateString = '2024-02-04';
-            const send_at = writtendate;
-            const arrive_at =arrivalDateString;
-            const sendstate=1;
+      try {
+          const getWriterIDQuery = 'SELECT memberID FROM User WHERE email= ?';
+          const [userResult] =connection.query(getWriterIDQuery, [writer]);
 
-            
-            
-			// base64 디코딩해서 이미지 경로로 변환
-			//const imagePaths=cards.map((card)=>saveImage(card.image))
-			console.log(receiver, writer, writtendate, arrive_at, music, theme,cards);
-            const getWriterIDQuery = 'SELECT memberID FROM User WHERE email = ?';
-			
-            connection.query(getWriterIDQuery, [writer], (err, userResult) => {
-                if (err) {
-                    console.error('Error executing MySQL query (User):', err);
-                    return res.status(500).json({
-                        isSuccess: false,
-                        code: '5000',
-                        message: 'memberID를 User테이블에서 불러오는데 실패하였습니다. ',
-                        result: null
-                    });
-                }
-                if (userResult.length === 0) {
-                    return res.status(400).json({
-                        isSuccess: false,
-                        code: '4001',
-                        message: '유효하지않은 email입니다.',
-                        result: null
-                    });
-                }
-                const memberID = userResult[0].memberID;
-                const insertCapsuleQuery = 'INSERT INTO Capsule (senderID, send_at, arrive_at, music, theme, sendState) VALUES (?, ?, ?, ?, ?, ?)';
-                connection.query(insertCapsuleQuery, [memberID, send_at, arrive_at, music, theme, sendstate], (err, capsuleResult) => {
-                    if (err) {
-                        console.error('Error executing MySQL query (Capsule):', err);
-                        return res.status(500).json({
-                            isSuccess: false,
-                            code: '5001',
-                            message: 'capsule정보 db에 저장실패. ',
-                            result: null
-                        });
-                    }
-                    const capsuleID = capsuleResult.insertId;
-                    const insertContentsQuery = 'INSERT INTO Contents (capsuleID, imageUrl, text) VALUES ?';
-                    const cardsData = cards.map((card) => [capsuleID, saveImage(card.file), card.text]);
-					// const cardData=req.files.map((file, index)=>[capsuleID, file.path, req.body.cards[index].text])
-					
-					console.log(cardsData);
-                    connection.query(insertContentsQuery, [cardsData], (err, contentResult) => {
-                        if (err) {
-                            console.error('Error executing MySQL query (Contents):', err);
-                            return res.status(500).json({
-                                isSuccess: false,
-                                code: '5002',
-                                message: 'Failed to save contents to the database',
-                                result: null
-                            });
-                        }
-                        const insertReceiverQuery = 'INSERT INTO Receiver (capsuleID, toEmail) VALUES (?, ?)';
-                        connection.query(insertReceiverQuery, [capsuleID, receiver], (err, receiverResult) => {
-                            if (err) {
-                                console.error('Error executing MySQL query (Receiver):', err);
-                                return res.status(500).json({
-                                    isSuccess: false,
-                                    code: '5003',
-                                    message: 'Failed to save receiver to the database',
-                                    result: null
-                                });
-                            }
-                            console.log('모든 정보 DB에 저장 완료!');
-                            return res.status(200).json({
-                                isSuccess: true,
-                                code: '2000',
-                                message: '캡슐전송완료!',
-                                result: null
-                            });
-                        });
-                    });
-                });
-            });
-        });
+          if (userResult.length === 0) {
+              return res.status(400).json({
+                  isSuccess: false,
+                  code: '4001',
+                  message: '유효하지 않은 email입니다.',
+                  result: null
+              });
+          }
 
-        function saveImage(binaryData) {
-          const imageBuffer = Buffer.from(binaryData, 'binary'); // Binary 데이터를 Buffer로 변환
-          const params = {
-              Bucket: 'capsule24-bucket',
-              Key: `${uuidv4()}.jpeg`, // 확장자를 JPEG로 설정
-              Body: imageBuffer,
-              ContentType: 'image/jpeg' // MIME 타입을 JPEG로 설정
-          };
-      
-          s3.upload(params, function(err, data) {
-              if (err) {
-                  console.error('S3에 이미지 업로드 실패:', err);
-                  return null;
-              } else {
-                  console.log('S3에 이미지 업로드 성공:', data.Location);
-                  return data.Location; // 이미지의 S3 경로 반환
-              }
+          const memberID = userResult[0].memberID;
+
+          const insertCapsuleQuery = 'INSERT INTO Capsule (senderID, send_at, arrive_at, music, theme, sendState) VALUES (?, ?, ?, ?, ?, ?)';
+          const [capsuleResult] =connection.query(insertCapsuleQuery, [memberID, send_at, arrive_at, music, theme, sendstate]);
+          const capsuleID = capsuleResult.insertId;
+
+          const insertContentsQuery = 'INSERT INTO Contents (capsuleID, imageUrl, text) VALUES ?';
+          const cardsData = [];
+
+          for (const card of cards) {
+              const imageUrl = await saveImage(card.buffer);
+              cardsData.push([capsuleID, imageUrl, card.originalname]);
+          }
+          connection.query(insertContentsQuery, [cardsData]);
+
+          const insertReceiverQuery = 'INSERT INTO Receiver (capsuleID, toEmail) VALUES (?, ?)';
+          connection.query(insertReceiverQuery, [capsuleID, receiver]);
+
+          console.log('모든 정보 DB에 저장 완료!');
+          return res.status(200).json({
+              isSuccess: true,
+              code: '2000',
+              message: '캡슐 전송 완료!',
+              result: null
           });
+      } catch (error) {
+          console.error('Error executing MySQL query:', error);
+          return res.status(500).json({
+              isSuccess: false,
+              code: '5000',
+              message: '서버 오류',
+              result: null
+          });
+      }
+  });
+
+async function saveImage(imageBuffer) {
+  try {
+      const params = {
+          Bucket: 'capsule24-bucket',
+          Key: `${uuidv4()}.jpeg`,
+          Body: imageBuffer,
+          ContentType: 'image/jpeg'
       };
-      
+
+      const data = await s3.upload(params).promise();
+      console.log('S3에 이미지 업로드 성공:', data.Location);
+      return data.Location;
+  } catch (error) {
+      console.error('S3에 이미지 업로드 실패 :', error);
+      throw error;
+  }
+}
 
 
 app.put('/capsule/:id', (req, res) => {
@@ -426,7 +406,7 @@ app.put('/capsule/:id', (req, res) => {
 	// Capsule 테이블의 readState 값을 업데이트하는 SQL 쿼리를 정의합니다.
 	const updateQuery = 'UPDATE Receiver SET readState = ? WHERE capsuleID = ?';
   
-	// SQL 쿼리를 실행하여 Capsule 테이블의 readState 값을 업데이트합니다.
+	// SQL 쿼리를 실행하여 Capsule 테이블의 realsdState 값을 업데이트합니다.
 	connection.query(updateQuery, [readState, capsuleId], (error,result) => {
     if (error) {
     console.error('Error updating readState:', error);
@@ -462,7 +442,7 @@ app.post('/users',
     if (req.headers.authorization) {
       token = req.headers.authorization.split('Bearer ')[1];
     }
-    console.log(`${token}`);
+    //console.log(`${token}`);
     const secretKey = require('./config/secretkey');
 
     jwt.verify(token, secretKey, (err, decoded) => {
@@ -518,14 +498,18 @@ app.post('/users',
             Capsule.theme,
             User.username,
             Contents.imageUrl, 
-            Contents.text
+            Contents.text,
+            Receiver.readstate
           FROM Capsule
+          INNER JOIN Receiver ON Capsule.capsuleID = Receiver.capsuleID
           INNER JOIN User ON Capsule.senderID = User.memberID
           INNER JOIN Contents ON Capsule.capsuleID = Contents.capsuleID
           WHERE Capsule.capsuleID IN (?)
           `;
 
         const capsuleResult = await query(getCapsulesQuery, [capsuleIDs]); // 비동기 쿼리 실행
+
+        
 
         const response2 = {
           token: req.headers.authorization, // JWT Token은 어디서 받아오는지에 따라 적절한 처리가 필요합니다.
@@ -542,9 +526,11 @@ app.post('/users',
             }],
             music: capsule.music,
             theme: capsule.theme,
-            isChecked: false, // boolean
+            isChecked: (capsule.readstate === 1 ? true : false) , // boolean
           }))
         };
+
+
 
         // 성공 응답 보내기
         console.log('Success Response:', response2);
@@ -567,3 +553,5 @@ app.post('/users',
 app.get('*', function(req, res) {
   res.sendFile(path.join(__dirname, 'client/build/index.html'))
 });
+
+//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
