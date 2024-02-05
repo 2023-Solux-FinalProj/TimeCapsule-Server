@@ -330,7 +330,7 @@ app.post('/capsule',
       const sendstate = 1;
 
       try {
-          const getWriterIDQuery = 'SELECT memberID FROM User WHERE username = ?';
+          const getWriterIDQuery = 'SELECT memberID FROM User WHERE email= ?';
           const [userResult] =connection.query(getWriterIDQuery, [writer]);
 
           if (userResult.length === 0) {
