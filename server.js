@@ -8,6 +8,7 @@ const path=require('path');
 const { v4: uuidv4 } = require('uuid');
 const multer  = require('multer');
 const util = require('util');
+const morgan = require('morgan');
 const AWS = require('aws-sdk');
 const multerS3 = require('multer-s3');
 
@@ -23,6 +24,9 @@ const multerS3 = require('multer-s3');
 const app = express();
 app.set('view engine', 'ejs');
 
+
+require('dotenv').config();
+app.use(morgan('dev'));
 
 // CORS 설정
 app.use(cors({
@@ -74,19 +78,18 @@ app.use(bodyParser.urlencoded({extended:true}));
 
 // 데이터베이스 연결
 connection.connect(err => {
-  if (err) {
-    return console.error('[Mysql 연결 에러] error: ' + err.message);
-  }
-  else {
-      console.log('MySQL 연결 성공!');
+    if (err) {
+		return console.error('[Mysql 연결 에러] error: ' + err.message);
+    }
+    else {
+        console.log('MySQL 연결 성공!');
 
-        //데이터베이스 연결 성공 -> 서버 시작
-      app.listen(port, () => {
-      console.log('CAPSULE 서버 8080 포트 연결 성공!');
-      });
-  }
+        // 데이터베이스 연결 성공 -> 서버 시작
+        app.listen(port, () => {
+			console.log('CAPSULE 서버 8080 포트 연결 성공!');
+        });
+    }
 });
-
 
 app.use(express.static(path.join(__dirname, 'client/build')));
 
@@ -294,7 +297,7 @@ const s3=new AWS.S3();
 const storage = multerS3({
   s3,
   acl: 'public-read',
-  bucket: '${capsule24-bucket}',
+  bucket: 'capsule24-bucket',
   contentType: multerS3.AUTO_CONTENT_TYPE,
   key: (req, file, cb) => {
     // 파일 이름 생성 및 반환
@@ -312,24 +315,24 @@ const upload = multer(
 
 //깃 테스트 
 app.post('/capsule',
-  (req, res, next) => {
-      let token = null;
-    if (req.headers.authorization) {
-        token = req.headers.authorization.split('Bearer ')[1];
-      }
-      const secretKey = require('./config/secretkey');
+  // (req, res, next) => {
+  //     let token = null;
+  //     if (req.headers.authorization) {
+  //         token = req.headers.authorization.split('Bearer ')[1];
+  //     }
+  //     const secretKey = require('./config/secretkey');
 
-      jwt.verify(token, secretKey, (err, decoded) => {
-        if (err) {
-            res.send(err.message);
-            return ;
-        }
-        else {
-            console.log("사용자 jwt 토큰 검증 완료");
-            next();
-        }
-    })
-  }, 
+  //     jwt.verify(token, secretKey, (err, decoded) => {
+  //         if (err) {
+  //             res.send(err.message);
+  //             return ;
+  //         }
+  //         else {
+  //             console.log("사용자 jwt 토큰 검증 완료");
+  //             next();
+  //         }
+  //     })
+  // }, 
     
 upload.array('cards'),
 
@@ -351,7 +354,7 @@ upload.array('cards'),
 			const imagePaths=cards.map((card)=>saveImage(card.image))
 			console.log(receiver, writer, writtendate, arrive_at, music, theme,imagePaths);
 
-            const getWriterIDQuery = 'SELECT memberID FROM User WHERE username = ?';
+            const getWriterIDQuery = 'SELECT memberID FROM User WHERE email = ?';
 			
             connection.query(getWriterIDQuery, [writer], (err, userResult) => {
                 if (err) {
@@ -434,24 +437,11 @@ upload.array('cards'),
 
 function saveImage(base64Data) {
     const imageBuffer = Buffer.from(base64Data, 'base64'); 
-    const params ={
-      Bucket:'',
-      Key:uuidv4() + '.jpeg',
-      Body:imageBuffer,
-      ContentType:'image/jpeg'
-    };
-    s3.upload(params,function(err,data){
-      if(err){
-        console.error('S3에 이미지 업로드 실패 :',err);
-        return null;
-      }
-      else{
-        console.error('S3에 이미지 업로드 성공:',data.Location);
-        return data.Location;
-      }
-    })
-};
-
+    const imagePath = path.join(__dirname, 'uploads', uuidv4() + '.jpeg'); 
+    console.log('이미지 업로드 경로:',imagePath);
+    fs.writeFileSync(imagePath, imageBuffer); 
+    return imagePath;
+}
 // const saveImage=(cards)=>{
 // 	return cards.map((card)=>{
 // 		const ext=path.extname(card.image)
