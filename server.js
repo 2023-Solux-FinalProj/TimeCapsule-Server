@@ -437,11 +437,24 @@ upload.array('cards'),
 
 function saveImage(base64Data) {
     const imageBuffer = Buffer.from(base64Data, 'base64'); 
-    const imagePath = path.join(__dirname, 'uploads', uuidv4() + '.jpeg'); 
-    console.log('이미지 업로드 경로:',imagePath);
-    fs.writeFileSync(imagePath, imageBuffer); 
-    return imagePath;
-}
+    const params ={
+      Bucket:'',
+      Key:uuidv4() + '.jpeg',
+      Body:imageBuffer,
+      ContentType:'image/jpeg'
+    };
+    s3.upload(params,function(err,data){
+      if(err){
+        console.error('S3에 이미지 업로드 실패 :',err);
+        return null;
+      }
+      else{
+        console.error('S3에 이미지 업로드 성공:',data.Location);
+        return data.Location;
+      }
+    })
+};
+
 // const saveImage=(cards)=>{
 // 	return cards.map((card)=>{
 // 		const ext=path.extname(card.image)
