@@ -333,6 +333,7 @@ upload.array('cards'),
             const send_at = writtendate;
             const arrive_at =arrivalDateString;
             const sendstate=1;
+	   console.log(receiver, writer, writtendate, arrive_at, music, theme, cards);
             
 			// base64 디코딩해서 이미지 경로로 변환
 			//const imagePaths=cards.map((card)=>saveImage(card.image))
