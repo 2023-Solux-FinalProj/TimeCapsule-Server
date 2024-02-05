@@ -355,7 +355,7 @@ app.post('/capsule',
           const cardsData = [];
 
           for (const card of cards) {
-              const imageUrl = await saveImage(card.buffer);
+              const imageUrl = saveImage(card.buffer);
               cardsData.push([capsuleID, imageUrl, card.originalname]);
           }
           connection.query(insertContentsQuery, [cardsData]);
