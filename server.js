@@ -341,7 +341,7 @@ upload.array('cards'),
             const writer = req.body.writer;
             const writtendate = req.body.writtendate;
             const arrivaldate =req.body.arrivaldate;
-            const cards =  req.files;
+            const cards = req.body.cards;
             const music = req.body.music;
             const theme = req.body.theme;
             const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
@@ -354,7 +354,7 @@ upload.array('cards'),
 			//const imagePaths=cards.map((card)=>saveImage(card.image))
 			//console.log(receiver, writer, writtendate, arrive_at, music, theme,imagePaths);
 
-            const getWriterIDQuery = 'SELECT memberID FROM User WHERE username = ?';
+            const getWriterIDQuery = 'SELECT memberID FROM User WHERE email = ?';
 			
             connection.query(getWriterIDQuery, [writer], (err, userResult) => {
                 if (err) {
@@ -393,15 +393,13 @@ upload.array('cards'),
                     const capsuleID = capsuleResult.insertId;
 
                     const insertContentsQuery = 'INSERT INTO Contents (capsuleID, imageUrl, text) VALUES ?';
-                    const cardsData = cards.map((card) => [capsuleID, card.location, card.text]);
-					// const cardData=req.files.map((file, index)=>[capsuleID, file.path, req.body.cards[index].text])
-					          const values=cardsData.map(card => '(' + card.map(connection.escape).join(',') + ')').join(',');
+                    const cardsData = cards.map((card) => [capsuleID,saveImage(card.image), card.text]);
+					          // const cardData=req.files.map((file, index)=>[capsuleID, file.path, req.body.cards[index].text])
+					          
 
 					          console.log(cardsData);
 
-                    const insertContentsQueryWithValues = insertContentsQuery.replace('?', values)
-
-                    connection.query(insertContentsQueryWithValues,(err, contentResult) => {
+                    connection.query(insertContentsQuery,(err, contentResult) => {
                         if (err) {
                             console.error('Error executing MySQL query (Contents):', err);
                             return res.status(500).json({
@@ -437,27 +435,27 @@ upload.array('cards'),
             });
         });
 
-//function saveImage(base64Data) {
-  //return new Promise((resolve, reject)=> {
-    //const imageBuffer = Buffer.from(base64Data, 'base64'); 
-    //const params ={
-   //   Bucket:'capsule24-bucket',
-   //   Key:uuidv4() + '.jpeg',
-   //   Body:imageBuffer,
-    //  ContentType:'image/jpeg'
-   // };
-    //s3.upload(params,function(err,data){
-      //if(err){
-        //console.error('S3에 이미지 업로드 실패 :',err);
-        //reject(err);
-      //}
-      //else{
-        //console.error('S3에 이미지 업로드 성공:',data.Location);
-        //resolve(data.Location);
-      //}
-    //})
-  //})
-//};
+function saveImage(base64Data) {
+  return new Promise((resolve, reject)=> {
+    const imageBuffer = Buffer.from(base64Data, 'base64'); 
+    const params ={
+      Bucket:'capsule24-bucket',
+      Key:uuidv4() + '.jpeg',
+      Body:imageBuffer,
+      ContentType:'image/jpeg'
+    };
+    s3.upload(params,function(err,data){
+      if(err){
+        console.error('S3에 이미지 업로드 실패 :',err);
+        reject(err);
+      }
+      else{
+        console.error('S3에 이미지 업로드 성공:',data.Location);
+        resolve(data.Location);
+      }
+    })
+  })
+};
 
 
 
