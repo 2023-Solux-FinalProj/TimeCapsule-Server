@@ -73,18 +73,39 @@ app.use(bodyParser.urlencoded({extended:true}));
 
 
 // 데이터베이스 연결
-connection.connect(err => {
-    if (err) {
-		return console.error('[Mysql 연결 에러] error: ' + err.message);
-    }
-    else {
-        console.log('MySQL 연결 성공!');
+//connection.connect(err => {
+  //  if (err) {
+//		return console.error('[Mysql 연결 에러] error: ' + err.message);
+  //  }
+   // else {
+     //   console.log('MySQL 연결 성공!');
 
         // 데이터베이스 연결 성공 -> 서버 시작
-        app.listen(port, () => {
-			console.log('CAPSULE 서버 8080 포트 연결 성공!');
-        });
-    }
+  //      app.listen(port, () => {
+//			console.log('CAPSULE 서버 8080 포트 연결 성공!');
+      //  });
+   // }
+//});
+
+connection.connect(err => {
+  if (err) {
+      console.error('[Mysql 연결 에러] error: ' + err.message);
+      return;
+  }
+
+  // MySQL 연결 성공시 사용자 인증 방식 변경
+  connection.query("ALTER USER 'admin'@'database-capsule.cufcntrxete1.ap-northeast-2.rds.amazonaws.com' IDENTIFIED WITH mysql_native_password BY 'capsule2024';", (err, result) => {
+      if (err) {
+          console.error('[사용자 인증 방식 변경 에러] error: ' + err.message);
+          return;
+      }
+      console.log('MySQL 사용자 인증 방식 변경 성공!');
+
+      // 데이터베이스 연결 성공 -> 서버 시작
+      app.listen(port, () => {
+          console.log('CAPSULE 서버 8080 포트 연결 성공!');
+      });
+  });
 });
 
 app.use(express.static(path.join(__dirname, 'client/build')));
