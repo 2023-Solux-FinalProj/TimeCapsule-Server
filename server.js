@@ -315,24 +315,24 @@ const upload = multer(
 
 //깃 테스트 
 app.post('/capsule',
-  //(req, res, next) => {
-      //let token = null;
-   //   if (req.headers.authorization) {
-     //     token = req.headers.authorization.split('Bearer ')[1];
-      //}
-      //const secretKey = require('./config/secretkey');
+  (req, res, next) => {
+      let token = null;
+    if (req.headers.authorization) {
+        token = req.headers.authorization.split('Bearer ')[1];
+      }
+      const secretKey = require('./config/secretkey');
 
-      //jwt.verify(token, secretKey, (err, decoded) => {
-         // if (err) {
-           //   res.send(err.message);
-             // return ;
-         // }
-         // else {
-           //   console.log("사용자 jwt 토큰 검증 완료");
-             // next();
-         // }
-     // })
-  //}, 
+      jwt.verify(token, secretKey, (err, decoded) => {
+        if (err) {
+            res.send(err.message);
+            return ;
+        }
+        else {
+            console.log("사용자 jwt 토큰 검증 완료");
+            next();
+        }
+    })
+  }, 
     
 upload.array('cards'),
 
@@ -354,7 +354,7 @@ upload.array('cards'),
 			const imagePaths=cards.map((card)=>saveImage(card.image))
 			console.log(receiver, writer, writtendate, arrive_at, music, theme,imagePaths);
 
-            const getWriterIDQuery = 'SELECT memberID FROM User WHERE email = ?';
+            const getWriterIDQuery = 'SELECT memberID FROM User WHERE username = ?';
 			
             connection.query(getWriterIDQuery, [writer], (err, userResult) => {
                 if (err) {
