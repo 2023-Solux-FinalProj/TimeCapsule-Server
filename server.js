@@ -271,7 +271,6 @@ app.post('/login', async(req, res, next) => {
 // 	})
 // }
 
-app.use(express.static(path.join(__dirname, 'uploads')));
 
 //이미지 저장을 위한 AWS S3업로드 설정 
 AWS.config.update({
@@ -281,6 +280,7 @@ AWS.config.update({
 });
 
 const s3=new AWS.S3();
+
 const storage = multerS3({
   s3,
   acl: 'public-read',
@@ -333,11 +333,12 @@ upload.array('cards'),
             const send_at = writtendate;
             const arrive_at =arrivalDateString;
             const sendstate=1;
-	   console.log(receiver, writer, writtendate, arrive_at, music, theme, cards);
+
+            
             
 			// base64 디코딩해서 이미지 경로로 변환
 			//const imagePaths=cards.map((card)=>saveImage(card.image))
-			//console.log(receiver, writer, writtendate, arrive_at, music, theme,imagePaths);
+			console.log(receiver, writer, writtendate, arrive_at, music, theme,cards);
             const getWriterIDQuery = 'SELECT memberID FROM User WHERE email = ?';
 			
             connection.query(getWriterIDQuery, [writer], (err, userResult) => {
@@ -372,7 +373,7 @@ upload.array('cards'),
                     }
                     const capsuleID = capsuleResult.insertId;
                     const insertContentsQuery = 'INSERT INTO Contents (capsuleID, imageUrl, text) VALUES ?';
-                    const cardsData = cards.map((card) => [capsuleID, card.location, card.text]);
+                    const cardsData = cards.map((card) => [capsuleID,saveImage(card.file), card.text]);
 					// const cardData=req.files.map((file, index)=>[capsuleID, file.path, req.body.cards[index].text])
 					
 					console.log(cardsData);
@@ -410,12 +411,29 @@ upload.array('cards'),
             });
         });
 
+        function saveImage(binaryData) {
+          const imageBuffer = Buffer.from(binaryData, 'binary'); // Binary 데이터를 Buffer로 변환
+          const params = {
+              Bucket: 'capsule24-bucket',
+              Key: `${uuidv4()}.jpeg`, // 확장자를 JPEG로 설정
+              Body: imageBuffer,
+              ContentType: 'image/jpeg' // MIME 타입을 JPEG로 설정
+          };
+      
+          s3.upload(params, function(err, data) {
+              if (err) {
+                  console.error('S3에 이미지 업로드 실패:', err);
+                  return null;
+              } else {
+                  console.log('S3에 이미지 업로드 성공:', data.Location);
+                  return data.Location; // 이미지의 S3 경로 반환
+              }
+          });
+      };
 
 
 
-
-
-
+          
 
 
 
