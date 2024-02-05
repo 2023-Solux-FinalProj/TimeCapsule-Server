@@ -295,7 +295,7 @@ app.post('/capsule',
       })
   }, 
     
-upload.array('cards'),(req, res) => {
+upload.array('cards[i][file]'),(req, res) => {
             const receiver = req.body.receiver;
             const writer = req.body.writer;
             const writtendate = req.body.writtendate;
@@ -313,7 +313,7 @@ upload.array('cards'),(req, res) => {
 		//	const imagePaths=cards.map((card)=>saveImage(card.image))
 		//	console.log(receiver, writer, writtendate, arrive_at, music, theme,imagePaths);
 
-            const getWriterIDQuery = 'SELECT memberID FROM User WHERE username = ?';
+            const getWriterIDQuery = 'SELECT memberID FROM User WHERE email = ?';
 			
             connection.query(getWriterIDQuery, [writer], (err, userResult) => {
                 if (err) {
