@@ -487,8 +487,9 @@ app.put('/capsule/:id', (req, res) => {
 });
 
 
-
 const query = util.promisify(connection.query).bind(connection);
+
+
 app.post('/users', 
   // JWT 토큰 검증 미들웨어
   (req, res, next) => {
@@ -556,26 +557,35 @@ app.post('/users',
           `;
         const capsuleResult = await query(getCapsulesQuery, [capsuleIDs]); // 비동기 쿼리 실행
         
-        const response2 = {
-          token: req.headers.authorization, // JWT Token은 어디서 받아오는지에 따라 적절한 처리가 필요합니다.
-          email: email.toString(),
-          name: username,
-          capsules: capsuleResult.map(capsule => ({
-            id: capsule.capsuleID,
-            writer: capsule.username,
-            writtendate: capsule.send_at,
-            arrivaldate: capsule.arrive_at,
-            cards: [{
-              image: capsule.imageUrl,
-              text: capsule.text
-            }],
-            music: capsule.music,
-            theme: capsule.theme,
-            isChecked: (capsule.readstate === 1 ? true : false) , // boolean
-          }))
+        const capsulesMap = new Map();
+
+        capsuleResult.forEach(capsule=> {
+          if(!capsulesMap.has(capsule.capsuleID)){
+            capsulesMap.set(capsule.capsuleID,{
+              id: capsule.capsuleID,
+              writer: capsule.username,
+              writtendate: capsule.send_at,
+              arrivaldate: capsule.arrive_at,
+              music: capsule.music,
+              theme: capsule.theme,
+              isChecked: (capsule.readstate === 1 ? true : false),
+              cards: []
+            });
+          }
+          capsuleMap.get(capsule.capsuleID).cards.push({
+            image:capsule.imagUrl,
+            text:capsule.text
+          })
+        });
+
+        const response2={
+          token:req.headers.authorization,
+          email:email.toString(),
+          name:username,
+          capsules:Array.from(capsulesMap.values())
         };
         // 성공 응답 보내기
-        //console.log('Success Response:', response2);
+        console.log('Success Response:', response2);
         return res.status(200).json({
           result: response2
         });
@@ -591,6 +601,10 @@ app.post('/users',
     }
   }
 );
+
+
+
+
 app.get('*', function(req, res) {
   res.sendFile(path.join(__dirname, 'client/build/index.html'))
 });
