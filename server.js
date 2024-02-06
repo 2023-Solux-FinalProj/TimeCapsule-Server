@@ -296,7 +296,7 @@ app.post(
     const sendstate = 1;
 
     const cardImages = req.files;
-    const {cardTexts} = req.body.cardTexts;
+    const cardTexts = req.body.cardTexts;
     console.log(receiver, writer, send_at, music, theme, cardTexts);
     console.log('Uploaded Files:');
     cardImages.forEach((file, index) => {
@@ -360,15 +360,17 @@ app.post(
 
             console.log("[cardTexts] :    ")
             console.log(`${cardTexts}`);
-            const promises = cardImages.map((image, index) => {
-              console.log("[cardImages] :    ")
-              console.log(`${image}`);              
-              console.log("[cardImages.path] :    ")
-              console.log(`${image.path}`);
-              console.log("[cardTexts]", `${index} :    `)
-              console.log(`${cardTexts[index]}`);
+            const promises = cardTexts.map((text, index) => {
+              // console.log("[cardImages] :    ")
+              // console.log(`${image}`);              
+              console.log("[cardImages.location] :    ")
+              console.log(`${image.location}`);
+              // console.log("[cardTexts]", `${index} :    `)
+              // console.log(`${cardTexts[index]}`);
+              console.log("[cardTexts] :      ")
+              console.log(`${text}`);
               console.log();
-              return [capsuleID, image.path, cardTexts[index]];
+              return [capsuleID, cardImages[index], text];
             })
 
             Promise.all(promises).then((data) => {
