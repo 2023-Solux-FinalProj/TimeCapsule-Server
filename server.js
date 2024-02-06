@@ -299,132 +299,144 @@ const upload = multer(
     limits: {fieldSize : 25 * 1024 * 1024} }, 
 );
 
-//깃 테스트 
-app.post('/capsule',
 
-  (req, res, next) => {
-      let token = null;
-      if (req.headers.authorization) {
-          token = req.headers.authorization.split('Bearer ')[1];
-      }
-      const secretKey = require('./config/secretkey');
+app.post('/capsule', (req, res, next) => {
+    let token = null;
+    if (req.headers.authorization) {
+        token = req.headers.authorization.split('Bearer ')[1];
+    }
+    const secretKey = require('./config/secretkey');
 
-      jwt.verify(token, secretKey, (err, decoded) => {
-          if (err) {
-               res.send(err.message);
-               return ;
-           }
-           else {
-               console.log("사용자 jwt 토큰 검증 완료");
-               next();
-         }
-      })
-   }, 
+    jwt.verify(token, secretKey, (err, decoded) => {
+        if (err) {
+            res.send(err.message);
+            return;
+        } else {
+            console.log('사용자 jwt 토큰 검증 완료');
+            next();
+        }
+    });
+}, upload.array('cardImages'), (req, res) => {
+    const receiver = req.body.receiver;
+    const writer = req.body.writer;
+    const writtendate = req.body.writtendate;
+    const arrivaldate = req.body.arrivaldate;
+    const cardsTexts = req.body.cardTexts;
+    const music = req.body.music;
+    const theme = req.body.theme;
+    const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
+    const send_at = writtendate;
+    const arrive_at = arrivalDateString;
+    const sendstate = 1;
 
+    const getWriterIDQuery = 'SELECT memberID FROM User WHERE email = ?';
 
-upload.array('cardImages'), 
-(req, res) => {
-            const receiver = req.body.receiver;
-            const writer = req.body.writer;
-            const writtendate = req.body.writtendate;
-            const arrivaldate =req.body.arrivaldate;
-            const cardsTexts = req.body.cardsTexts;
-            const music = req.body.music;
-            const theme = req.body.theme;
-            const arrivalDateString = `${arrivaldate.year}-${arrivaldate.month}-${arrivaldate.day}`;
-            //const arrivalDateString = '2024-02-04';
-            const send_at = writtendate;
-            const arrive_at =arrivalDateString;
-            const sendstate=1;
+    connection.query(getWriterIDQuery, [writer], (err, userResult) => {
+        if (err) {
+            console.error('Error executing MySQL query (User):', err);
+            return res.status(500).json({
+                isSuccess: false,
+                code: '5000',
+                message: 'memberID를 User테이블에서 불러오는데 실패하였습니다. ',
+                result: null
+            });
+        }
+        if (userResult.length === 0) {
+            return res.status(400).json({
+                isSuccess: false,
+                code: '4001',
+                message: '유효하지않은 email입니다.',
+                result: null
+            });
+        }
+        const memberID = userResult[0].memberID;
+        const insertCapsuleQuery = 'INSERT INTO Capsule (senderID, send_at, arrive_at, music, theme, sendState) VALUES (?, ?, ?, ?, ?, ?)';
+        connection.query(insertCapsuleQuery, [memberID, send_at, arrive_at, music, theme, sendstate], (err, capsuleResult) => {
+            if (err) {
+                console.error('Error executing MySQL query (Capsule):', err);
+                return res.status(500).json({
+                    isSuccess: false,
+                    code: '5001',
+                    message: 'capsule정보 db에 저장실패. ',
+                    result: null
+                });
+            }
+            const capsuleID = capsuleResult.insertId;
 
-            
-            
-			// base64 디코딩해서 이미지 경로로 변환
-			//const imagePaths=cards.map((card)=>saveImage(card.image))
-			console.log(receiver, writer, writtendate, arrive_at, music, theme,cards);
-            
-      const getWriterIDQuery = 'SELECT memberID FROM User WHERE email = ?';
-			
-            connection.query(getWriterIDQuery, [writer], (err, userResult) => {
-                if (err) {
-                    console.error('Error executing MySQL query (User):', err);
-                    return res.status(500).json({
-                        isSuccess: false,
-                        code: '5000',
-                        message: 'memberID를 User테이블에서 불러오는데 실패하였습니다. ',
-                        result: null
-                    });
-                }
-                if (userResult.length === 0) {
-                    return res.status(400).json({
-                        isSuccess: false,
-                        code: '4001',
-                        message: '유효하지않은 email입니다.',
-                        result: null
-                    });
-                }
-                const memberID = userResult[0].memberID;
-                const insertCapsuleQuery = 'INSERT INTO Capsule (senderID, send_at, arrive_at, music, theme, sendState) VALUES (?, ?, ?, ?, ?, ?)';
-                connection.query(insertCapsuleQuery, [memberID, send_at, arrive_at, music, theme, sendstate], (err, capsuleResult) => {
-                    if (err) {
-                        console.error('Error executing MySQL query (Capsule):', err);
-                        return res.status(500).json({
-                            isSuccess: false,
-                            code: '5001',
-                            message: 'capsule정보 db에 저장실패. ',
-                            result: null
+            const promises = req.files.map(file => {
+                return saveImage(file.buffer)
+                    .then(imageUrl => {
+                        const insertContentsQuery = 'INSERT INTO Contents (capsuleID, imageUrl, text) VALUES (?, ?, ?)';
+                        const cardIndex = req.files.indexOf(file);
+                        const cardText = cardsTexts[cardIndex];
+                        return new Promise((resolve, reject) => {
+                            connection.query(insertContentsQuery, [capsuleID, imageUrl, cardText], (err, contentResult) => {
+                                if (err) {
+                                    reject(err);
+                                } else {
+                                    resolve(contentResult);
+                                }
+                            });
                         });
-                    }
-                    const capsuleID = capsuleResult.insertId;
+                    });
+            });
 
-
-                    const insertContentsQuery = 'INSERT INTO Contents (capsuleID, imageUrl, text) VALUES ?';
-                    
-                    const cardsData = req.files.map((file,index)=> [
-                      capsuleID,
-                      file.location,
-                      cardsTexts[index]
-                    ]);
-
-					// const cardData=req.files.map((file, index)=>[capsuleID, file.path, req.body.cards[index].text])
-					
-					console.log(cardsData);
-                    connection.query(insertContentsQuery, [cardsData], (err, contentResult) => {
+            Promise.all(promises)
+                .then(() => {
+                    const insertReceiverQuery = 'INSERT INTO Receiver (capsuleID, toEmail) VALUES (?, ?)';
+                    connection.query(insertReceiverQuery, [capsuleID, receiver], (err, receiverResult) => {
                         if (err) {
-                            console.error('Error executing MySQL query (Contents):', err);
+                            console.error('Error executing MySQL query (Receiver):', err);
                             return res.status(500).json({
                                 isSuccess: false,
-                                code: '5002',
-                                message: 'Failed to save contents to the database',
+                                code: '5003',
+                                message: 'Failed to save receiver to the database',
                                 result: null
                             });
                         }
-                        const insertReceiverQuery = 'INSERT INTO Receiver (capsuleID, toEmail) VALUES (?, ?)';
-                        connection.query(insertReceiverQuery, [capsuleID, receiver], (err, receiverResult) => {
-                            if (err) {
-                                console.error('Error executing MySQL query (Receiver):', err);
-                                return res.status(500).json({
-                                    isSuccess: false,
-                                    code: '5003',
-                                    message: 'Failed to save receiver to the database',
-                                    result: null
-                                });
-                            }
-                            console.log('모든 정보 DB에 저장 완료!');
-                            return res.status(200).json({
-                                isSuccess: true,
-                                code: '2000',
-                                message: '캡슐전송완료!',
-                                result: null
-                            });
+                        console.log('모든 정보 DB에 저장 완료!');
+                        return res.status(200).json({
+                            isSuccess: true,
+                            code: '2000',
+                            message: '캡슐전송완료!',
+                            result: null
                         });
                     });
+                })
+                .catch((err) => {
+                    console.error('Error executing MySQL query (Contents):', err);
+                    return res.status(500).json({
+                        isSuccess: false,
+                        code: '5002',
+                        message: 'Failed to save contents to the database',
+                        result: null
+                    });
                 });
-            });
         });
+    });
+});
 
+function saveImage(binaryData) {
+    return new Promise((resolve, reject) => {
+        const imageBuffer = Buffer.from(binaryData, 'binary'); // Binary 데이터를 Buffer로 변환
+        const params = {
+            Bucket: 'capsule24-bucket',
+            Key: `${uuidv4()}.jpeg`, // 확장자를 JPEG로 설정
+            Body: imageBuffer,
+            ContentType: 'image/jpeg' // MIME 타입을 JPEG로 설정
+        };
 
-
+        s3.upload(params, function(err, data) {
+            if (err) {
+                console.error('S3에 이미지 업로드 실패:', err);
+                reject(err); // 실패한 경우 reject 호출
+            } else {
+                console.log('S3에 이미지 업로드 성공:', data.Location);
+                resolve(data.Location); // 성공한 경우 resolve 호출
+            }
+        });
+    });
+}
 
 
  
