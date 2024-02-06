@@ -358,7 +358,11 @@ app.post(
             //   return [capsuleID, imageUrl, card.text];
             // });
 
+            console.log("[cardTexts] :    ")
+            console.log(`${cardTexts}`);
             const promises = cardImages.map((image, index) => {
+              console.log("[cardImages] :    ")
+              console.log(`${image}`);
               return [capsuleID, image.path, cardTexts[index]];
             })
 
