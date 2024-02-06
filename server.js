@@ -41,6 +41,7 @@ const connection = mysql.createConnection({
   password: 'capsule2024', // 데이터베이스 비밀번호
   database: 'capsule', // 연결할 데이터베이스 이름
   port: '3306',
+  charset: "utf8mb4"
 });
 app.use(express.json());
 // 쿼리 스트링 라이브러리
