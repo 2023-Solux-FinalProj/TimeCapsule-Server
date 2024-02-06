@@ -248,7 +248,8 @@ const storage = multerS3({
   contentType: multerS3.AUTO_CONTENT_TYPE,
   key: (req, file, cb) => {
     // 파일 이름 생성 및 반환
-    cb(null, `${Date.now().toString()}_${uuid()}_${file.originalname}`);
+    // cb(null, `${Date.now().toString()}_${uuid()}_${file.originalname}`);
+    cb(null, `${Date.now().toString()}_${file.originalname}`);
   },
 });
 const upload = multer({
