@@ -296,7 +296,7 @@ app.post(
     const sendstate = 1;
 
     const cardImages = req.files;
-    const cardTexts = req.body.cardTexts;
+    const cardTexts = Arrat.from(req.body.cardTexts);
     console.log(receiver, writer, send_at, music, theme, cardTexts);
     console.log('Uploaded Files:');
     cardImages.forEach((file, index) => {
@@ -371,7 +371,7 @@ app.post(
               // console.log("[cardTexts] :      ")
               // console.log(`${text}`);
               console.log();
-              return [capsuleID, image, cardTexts[index]];
+              return [capsuleID, image.location, cardTexts[index]];
             })
 
             Promise.all(promises).then((data) => {
