@@ -573,7 +573,7 @@ app.post('/users',
             });
           }
           capsulesMap.get(capsule.capsuleID).cards.push({
-            image:capsule.imagUrl,
+            image:capsule.imageUrl,
             text:capsule.text
           })
         });
