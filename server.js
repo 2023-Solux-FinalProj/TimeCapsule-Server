@@ -358,19 +358,20 @@ app.post(
             //   return [capsuleID, imageUrl, card.text];
             // });
 
+            console.log(Array.isArray(cardTexts)); 
             console.log("[cardTexts] :    ")
             console.log(`${cardTexts}`);
-            const promises = cardTexts.map((text, index) => {
+            const promises = cardImages.map((image, index) => {
               // console.log("[cardImages] :    ")
               // console.log(`${image}`);              
               console.log("[cardImages.location] :    ")
               console.log(`${image.location}`);
               // console.log("[cardTexts]", `${index} :    `)
               // console.log(`${cardTexts[index]}`);
-              console.log("[cardTexts] :      ")
-              console.log(`${text}`);
+              // console.log("[cardTexts] :      ")
+              // console.log(`${text}`);
               console.log();
-              return [capsuleID, cardImages[index], text];
+              return [capsuleID, image, cardTexts[index]];
             })
 
             Promise.all(promises).then((data) => {
