@@ -244,7 +244,7 @@ const s3 = new AWS.S3();
 const storage = multerS3({
   s3,
   acl: 'public-read',
-  bucket: 'capsule24-bucket',
+  bucket: 'capsule2426-bucket',
   contentType: multerS3.AUTO_CONTENT_TYPE,
   key: (req, file, cb) => {
     // 파일 이름 생성 및 반환
