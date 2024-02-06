@@ -286,7 +286,7 @@ app.post(
     const writer = req.body.writer;
     const writtendate = req.body.writtendate;
     const arrivaldate = req.body.arrivaldate;
-    // const cards = req.body.cards;
+    const cards = req.body.cards;
     const music = req.body.music;
     const theme = req.body.theme;
 
