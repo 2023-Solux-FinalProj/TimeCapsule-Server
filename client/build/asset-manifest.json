@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.css": "/static/css/main.c66a1c29.css",
+    "main.css": "/static/css/main.0406049e.css",
     "main.js": "/static/js/main.96b74ecd.js",
     "static/media/theme_main_tree_lock.png": "/static/media/theme_main_tree_lock.8b87f0069cfe213b2d3c.png",
     "static/media/bg_theme_default.png": "/static/media/bg_theme_default.cb0cef203d3e4197f6a3.png",
@@ -38,8 +38,8 @@
     "static/media/theme_icon_retro_active.svg": "/static/media/theme_icon_retro_active.93b00136c67cb94a5a9d857595eb7ef3.svg",
     "static/media/ic_addphoto.svg": "/static/media/ic_addphoto.ccfb8c61ade8a2c83e4b51756b92f120.svg",
     "static/media/ic_newpost.svg": "/static/media/ic_newpost.ff5eee1455a54fb1a6df53e26715c93f.svg",
-    "static/media/ic_editphoto.svg": "/static/media/ic_editphoto.3c5bf07e709115d3e819cc0f7099bc04.svg",
     "index.html": "/index.html",
+    "static/media/ic_editphoto.svg": "/static/media/ic_editphoto.3c5bf07e709115d3e819cc0f7099bc04.svg",
     "static/media/theme_icon_retro.svg": "/static/media/theme_icon_retro.4fecc8da387ff506a4b8929dc89ee880.svg",
     "static/media/cap_shadow.svg": "/static/media/cap_shadow.354ede6fa8c68f19c905d842778a4908.svg",
     "static/media/theme_icon_default.svg": "/static/media/theme_icon_default.11c7c0f1deb9c4683ca37ad7d904a441.svg",
@@ -54,11 +54,11 @@
     "static/media/ic_colored_check.svg": "/static/media/ic_colored_check.225e5f70ae9b8f71abee9388ef00cfca.svg",
     "static/media/ic_empty_check.svg": "/static/media/ic_empty_check.70be375f1cb7ff1c1cd550c5c1bf30c9.svg",
     "static/media/ic_add.svg": "/static/media/ic_add.f00c5a53b06c6760ea2409fbba6c414c.svg",
-    "main.c66a1c29.css.map": "/static/css/main.c66a1c29.css.map",
+    "main.0406049e.css.map": "/static/css/main.0406049e.css.map",
     "main.96b74ecd.js.map": "/static/js/main.96b74ecd.js.map"
   },
   "entrypoints": [
-    "static/css/main.c66a1c29.css",
+    "static/css/main.0406049e.css",
     "static/js/main.96b74ecd.js"
   ]
 }
