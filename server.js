@@ -408,15 +408,15 @@ app.post(
             });
           }
         )
-        .catch((err) => {
-          console.error('Error during image upload or content insertion:', err);
-          return res.status(500).json({
-            isSuccess: false,
-            code: '5004',
-            message: 'Error during image upload or content insertion',
-            result: null,
-          });
-        });
+    //     .catch((err) => {
+    //       console.error('Error during image upload or content insertion:', err);
+    //       return res.status(500).json({
+    //         isSuccess: false,
+    //         code: '5004',
+    //         message: 'Error during image upload or content insertion',
+    //         result: null,
+    //       });
+    //    });
     });
   }
 );
