@@ -408,7 +408,7 @@ app.post(
             });
           }
         )
-        .catch((err) => {
+        if ((err) => {
           console.error('Error during image upload or content insertion:', err);
           return res.status(500).json({
             isSuccess: false,
