@@ -365,7 +365,7 @@ app.post(
               console.log(`${image}`);              
               console.log("[cardImages.path] :    ")
               console.log(`${image.path}`);
-              console.log("[cardTexts]"`${index} :    `)
+              console.log("[cardTexts]", `${index} :    `)
               console.log(`${cardTexts[index]}`);
               console.log();
               return [capsuleID, image.path, cardTexts[index]];
