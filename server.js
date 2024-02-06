@@ -426,7 +426,7 @@ function saveImage(base64Data) {
   return new Promise((resolve, reject) => {
     const imageBuffer = Buffer.from(base64Data, 'base64');
     const params = {
-      Bucket: 'capsule24-bucket',
+      Bucket: 'capsule2426-bucket',
       Key: uuidv4() + '.jpeg',
       Body: imageBuffer,
       ContentType: 'image/jpeg',
