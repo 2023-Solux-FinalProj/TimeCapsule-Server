@@ -297,8 +297,8 @@ app.post(
 
     const cardImages = req.files;
     const cardTexts = JSON.parse(req.body.cardTexts);
-    console.log("[ req : text가 배열로 오는지 확인 ]");
-    console.log(Array.isArray(cardTexts)); 
+    // console.log("[ req : text가 배열로 오는지 확인 ]");
+    // console.log(Array.isArray(cardTexts)); 
 
     console.log(receiver, writer, send_at, music, theme, cardTexts);
     console.log('Uploaded Files:');
@@ -367,13 +367,12 @@ app.post(
             const promises = cardImages.map((image, index) => {
               // console.log("[cardImages] :    ")
               // console.log(`${image}`);              
-              console.log("[cardImages.location] :    ")
-              console.log(`${image.location}`);
+              // console.log("[cardImages.location] :    ")
+              // console.log(`${image.location}`);
               // console.log("[cardTexts]", `${index} :    `)
               // console.log(`${cardTexts[index]}`);
               // console.log("[cardTexts] :      ")
               // console.log(`${text}`);
-              console.log();
               return [capsuleID, image.location, cardTexts[index]];
             })
 
@@ -576,7 +575,7 @@ app.post('/users',
           }))
         };
         // 성공 응답 보내기
-        console.log('Success Response:', response2);
+        //console.log('Success Response:', response2);
         return res.status(200).json({
           result: response2
         });
