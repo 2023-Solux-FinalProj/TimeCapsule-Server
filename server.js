@@ -296,9 +296,9 @@ app.post(
     const sendstate = 1;
 
     const cardImages = req.files;
-    const cardTexts = req.body.cardTexts;
+    const cardTexts = JSON.parse(req.body.cardTexts);
     console.log("[ req : text가 배열로 오는지 확인 ]");
-    console.log(Array.isArray(req.body.cardTexts)); 
+    console.log(Array.isArray(cardTexts)); 
 
     console.log(receiver, writer, send_at, music, theme, cardTexts);
     console.log('Uploaded Files:');
