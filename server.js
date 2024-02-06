@@ -359,7 +359,7 @@ app.post(
             // });
 
             const promises = cardImages.map((image, index) => {
-              return [capsuleID, image, cardTexts[index]];
+              return [capsuleID, image.path, cardTexts[index]];
             })
 
             Promise.all(promises).then((data) => {
