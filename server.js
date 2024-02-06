@@ -244,7 +244,7 @@ const s3 = new AWS.S3();
 const storage = multerS3({
   s3,
   acl: 'public-read',
-  bucket: 'capsule2426-bucket',
+  bucket: process.env.S3_BUCKET_NAME,
   contentType: multerS3.AUTO_CONTENT_TYPE,
   key: (req, file, cb) => {
     // 파일 이름 생성 및 반환
@@ -426,7 +426,7 @@ function saveImage(base64Data) {
   return new Promise((resolve, reject) => {
     const imageBuffer = Buffer.from(base64Data, 'base64');
     const params = {
-      Bucket: 'capsule2426-bucket',
+      Bucket: process.env.S3_BUCKET_NAME,
       Key: uuidv4() + '.jpeg',
       Body: imageBuffer,
       ContentType: 'image/jpeg',
