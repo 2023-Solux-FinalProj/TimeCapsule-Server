@@ -467,11 +467,10 @@ app.put('/capsule/:id', (req, res) => {
   });
 });
 
-// 사용자 정보 및 캡슐 정보 응답 엔드포인트
-const query = util.promisify(connection.query).bind(connection);
 
-app.post(
-  '/users',
+
+const query = util.promisify(connection.query).bind(connection);
+app.post('/users', 
   // JWT 토큰 검증 미들웨어
   (req, res, next) => {
     let token = null;
@@ -488,21 +487,20 @@ app.post(
         res.send(err.message);
         return;
       } else {
-        console.log('사용자 jwt 토큰 검증 완료');
+        console.log("사용자 jwt 토큰 검증 완료");
         req.body.email = decoded.email;
         req.body.username = decoded.name;
         next();
       }
-    });
-  },
+    })
+  }, 
   // 실제 엔드포인트 로직
   async (req, res) => {
     const username = req.body.username;
     const email = req.body.email;
     try {
       // receiver 테이블을 통해 해당 이메일과 일치하는 캡슐 ID를 가져오는 쿼리
-      const getCapsuleIDsQuery =
-        'SELECT capsuleID FROM Receiver WHERE toEmail = ?';
+      const getCapsuleIDsQuery = 'SELECT capsuleID FROM Receiver WHERE toEmail = ?';
       const capsuleIDResult = await query(getCapsuleIDsQuery, [email]); // 비동기 쿼리 실행
       const response1 = {
         token: req.headers.authorization,
@@ -512,12 +510,12 @@ app.post(
       };
       if (!capsuleIDResult || capsuleIDResult.length === 0) {
         // 해당하는 캡슐이 없는 경우
-        console.log('사용자에게 전송된 캡슐이 없습니다', response1);
+        console.log("사용자에게 전송된 캡슐이 없습니다", response1);
         return res.status(200).json({
-          result: response1,
+          result: response1
         });
       } else {
-        const capsuleIDs = capsuleIDResult.map((row) => row.capsuleID);
+        const capsuleIDs = capsuleIDResult.map(row => row.capsuleID);
         // 해당 사용자의 캡슐 정보를 가져오는 쿼리
         const getCapsulesQuery = `
           SELECT 
@@ -538,50 +536,29 @@ app.post(
           WHERE Capsule.capsuleID IN (?)
           `;
         const capsuleResult = await query(getCapsulesQuery, [capsuleIDs]); // 비동기 쿼리 실행
-
+        
         const response2 = {
           token: req.headers.authorization, // JWT Token은 어디서 받아오는지에 따라 적절한 처리가 필요합니다.
           email: email.toString(),
           name: username,
-          capsules: capsuleResult.reduce(
-            (acc,
-            (capsule) => {
-              const existingCapsule = acc.find(
-                (item) => item.id === capsule.capsuleID
-              );
-
-              if (existingCapsule) {
-                existingCapsule.cards.push({
-                  image: capsule.imageUrl,
-                  text: capsule.text,
-                });
-              } else {
-                acc.push({
-                  id: capsule.capsuleID,
-                  writer: capsule.username,
-                  writtendate: capsule.send_at,
-                  arrivaldate: capsule.arrive_at,
-                  cards: [
-                    {
-                      image: capsule.imageUrl,
-                      text: capsule.text,
-                    },
-                  ],
-                  music: capsule.music,
-                  theme: capsule.theme,
-                  isChecked: capsule.readstate === 1 ? true : false, // boolean
-                });
-              }
-              return acc;
-            },
-            [])
-          ),
+          capsules: capsuleResult.map(capsule => ({
+            id: capsule.capsuleID,
+            writer: capsule.username,
+            writtendate: capsule.send_at,
+            arrivaldate: capsule.arrive_at,
+            cards: [{
+              image: capsule.imageUrl,
+              text: capsule.text
+            }],
+            music: capsule.music,
+            theme: capsule.theme,
+            isChecked: (capsule.readstate === 1 ? true : false) , // boolean
+          }))
         };
-
         // 성공 응답 보내기
         console.log('Success Response:', response2);
         return res.status(200).json({
-          result: response2,
+          result: response2
         });
       }
     } catch (err) {
@@ -590,12 +567,13 @@ app.post(
         isSuccess: false,
         code: '5000',
         message: '서버 오류',
-        result: null,
+        result: null
       });
     }
   }
 );
-
-app.get('*', function (req, res) {
-  res.sendFile(path.join(__dirname, 'client/build/index.html'));
+app.get('*', function(req, res) {
+  res.sendFile(path.join(__dirname, 'client/build/index.html'))
 });
+
+
