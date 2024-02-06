@@ -296,7 +296,7 @@ app.post(
     const sendstate = 1;
 
     const cardImages = req.files;
-    const cardTexts = req.body.cardTexts;
+    const {cardTexts} = req.body.cardTexts;
     console.log(receiver, writer, send_at, music, theme, cardTexts);
     console.log('Uploaded Files:');
     cardImages.forEach((file, index) => {
