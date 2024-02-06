@@ -572,7 +572,7 @@ app.post('/users',
               cards: []
             });
           }
-          capsuleMap.get(capsule.capsuleID).cards.push({
+          capsulesMap.get(capsule.capsuleID).cards.push({
             image:capsule.imagUrl,
             text:capsule.text
           })
